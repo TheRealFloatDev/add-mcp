@@ -516,7 +516,6 @@ test("E2E CLI: remote install with --env warns and succeeds", () => {
   const configPath = join(projectDir, ".cursor", "mcp.json");
   assert.strictEqual(existsSync(configPath), true);
 });
-
 cleanup();
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);
