@@ -333,6 +333,15 @@ test("isTransportSupported - claude-desktop only supports stdio", () => {
   );
 });
 
+test("claude-desktop has unsupportedTransportMessage", () => {
+  const msg = agents["claude-desktop"].unsupportedTransportMessage;
+  assert.ok(msg, "claude-desktop should have an unsupportedTransportMessage");
+  assert.ok(
+    msg.includes("Settings"),
+    "message should mention the Settings UI path",
+  );
+});
+
 // ============================================
 // Agent Config Path Tests
 // ============================================

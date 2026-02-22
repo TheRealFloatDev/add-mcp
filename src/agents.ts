@@ -222,6 +222,8 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcpServers",
     format: "json",
     supportedTransports: ["stdio"],
+    unsupportedTransportMessage:
+      "Claude Desktop only supports local (stdio) servers via its config file. Add remote servers through Settings → Connectors in the app instead.",
     detectGlobalInstall: async () => {
       return existsSync(join(appSupport, "Claude"));
     },
