@@ -340,7 +340,9 @@ async function runFindCommand(
     name: options.name || installPlan.serverName,
     transport: installPlan.transport ?? options.transport,
     header: installPlan.headers
-      ? Object.entries(installPlan.headers).map(([key, value]) => `${key}: ${value}`)
+      ? Object.entries(installPlan.headers).map(
+          ([key, value]) => `${key}: ${value}`,
+        )
       : options.header,
   };
 
@@ -361,13 +363,12 @@ program
   )
   .option("-y, --yes", "Skip confirmation prompts")
   .option("--all", "Install to all agents")
-  .option(
-    "--gitignore",
-    "Add generated project config files to .gitignore",
-  )
-  .action(async (keyword: string, options: Options | { opts: () => Options }) => {
-    await runFindCommand(keyword, options);
-  });
+  .option("--gitignore", "Add generated project config files to .gitignore")
+  .action(
+    async (keyword: string, options: Options | { opts: () => Options }) => {
+      await runFindCommand(keyword, options);
+    },
+  );
 
 program
   .command("search <keyword>")
@@ -383,13 +384,12 @@ program
   )
   .option("-y, --yes", "Skip confirmation prompts")
   .option("--all", "Install to all agents")
-  .option(
-    "--gitignore",
-    "Add generated project config files to .gitignore",
-  )
-  .action(async (keyword: string, options: Options | { opts: () => Options }) => {
-    await runFindCommand(keyword, options);
-  });
+  .option("--gitignore", "Add generated project config files to .gitignore")
+  .action(
+    async (keyword: string, options: Options | { opts: () => Options }) => {
+      await runFindCommand(keyword, options);
+    },
+  );
 
 program.parse();
 
