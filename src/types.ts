@@ -36,6 +36,8 @@ export interface AgentConfig {
   format: ConfigFormat;
   /** Supported transport types for this agent */
   supportedTransports: ("stdio" | "sse" | "http")[];
+  /** Shown when a user tries to use an unsupported transport */
+  unsupportedTransportMessage?: string;
   /** Function to detect if agent is installed globally */
   detectGlobalInstall: () => Promise<boolean>;
   /** Optional function to transform server config to agent-specific format */

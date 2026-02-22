@@ -527,11 +527,18 @@ async function main(target: string | undefined, options: Options) {
       .map((a) => agents[a].displayName)
       .join(", ");
 
+    const hints = unsupportedAgents
+      .map((a) => agents[a].unsupportedTransportMessage)
+      .filter(Boolean);
+
     if (options.all) {
       // --all flag: warn but continue with supported agents
       p.log.warn(
         `Skipping agents that don't support ${requiredTransport} transport: ${unsupportedNames}`,
       );
+      for (const hint of hints) {
+        p.log.info(hint!);
+      }
       targetAgents = targetAgents.filter((a) =>
         isTransportSupported(a, requiredTransport),
       );
@@ -545,6 +552,9 @@ async function main(target: string | undefined, options: Options) {
       p.log.error(
         `The following agents don't support ${requiredTransport} transport: ${unsupportedNames}`,
       );
+      for (const hint of hints) {
+        p.log.info(hint!);
+      }
       process.exit(1);
     }
   }

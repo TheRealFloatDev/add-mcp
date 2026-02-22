@@ -154,6 +154,96 @@ test("E2E CLI: Goose HTTP install with headers", () => {
   });
 });
 
+test("E2E CLI: remote server to claude-desktop errors with custom message", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    ["https://mcp.example.com/mcp", "-a", "claude-desktop", "-y"],
+    projectDir,
+    homeDir,
+  );
+
+  assert.notStrictEqual(result.status, 0, "CLI should exit with non-zero");
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(
+    output,
+    /don't support http transport/,
+    "should report unsupported transport",
+  );
+  assert.match(
+    output,
+    /Settings.*Connectors/,
+    "should include the custom unsupportedTransportMessage",
+  );
+});
+
+test("E2E CLI: --all skips claude-desktop for remote server with custom message", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    ["https://mcp.example.com/mcp", "--all", "-y"],
+    projectDir,
+    homeDir,
+  );
+
+  assert.strictEqual(result.status, 0, "CLI should succeed");
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(
+    output,
+    /Skipping agents.*Claude Desktop/,
+    "should warn about skipping Claude Desktop",
+  );
+  assert.match(
+    output,
+    /Settings.*Connectors/,
+    "should include the custom unsupportedTransportMessage",
+  );
+});
+
+test("E2E CLI: stdio server to claude-desktop succeeds", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "@modelcontextprotocol/server-filesystem",
+      "-a",
+      "claude-desktop",
+      "-y",
+      "--name",
+      "filesystem",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(
+    homeDir,
+    "Library",
+    "Application Support",
+    "Claude",
+    "claude_desktop_config.json",
+  );
+  assert.strictEqual(existsSync(configPath), true);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const servers = saved.mcpServers as Record<string, unknown>;
+  assert.ok(servers.filesystem, "filesystem server should be configured");
+
+  const server = servers.filesystem as Record<string, unknown>;
+  assert.strictEqual(server.command, "npx");
+});
+
 cleanup();
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

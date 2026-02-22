@@ -2,7 +2,8 @@
 
 ## [1.2.2] - 2026-02-21
 
-fix Goose remote HTTP/SSE header support and simplify header capability handling
+- fix Goose remote HTTP/SSE header support and simplify header capability handling
+- fix Claude Desktop config to only support stdio (remote servers must be added through the Claude Desktop UI)
 
 ## [1.2.1] - 2026-02-17
 
