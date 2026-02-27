@@ -2,7 +2,7 @@
 
 Add MCP servers to your favorite coding agents with a single command.
 
-Supports **Claude Code**, **Codex**, **Cursor**, **OpenCode**, **VSCode** and [5 more](#supported-agents).
+Supports **Cline**, **Claude Code**, **Codex**, **Cursor**, **OpenCode**, **VSCode** and [5 more](#supported-agents).
 
 ## Install an MCP Server
 
@@ -138,6 +138,7 @@ MCP servers can be installed to any of these agents:
 
 | Agent              | `--agent`            | Project Path            | Global Path                                                       |
 | ------------------ | -------------------- | ----------------------- | ----------------------------------------------------------------- |
+| Cline              | `cline`              | -                       | `~/.cline/data/settings/cline_mcp_settings.json`                  |
 | Claude Code        | `claude-code`        | `.mcp.json`             | `~/.claude.json`                                                  |
 | Claude Desktop     | `claude-desktop`     | -                       | `~/Library/Application Support/Claude/claude_desktop_config.json` |
 | Codex              | `codex`              | `.codex/config.toml`    | `~/.codex/config.toml`                                            |
@@ -150,6 +151,8 @@ MCP servers can be installed to any of these agents:
 | Zed                | `zed`                | `.zed/settings.json`    | `~/Library/Application Support/Zed/settings.json`                 |
 
 **Aliases:** `gemini` → `gemini-cli`, `github-copilot` → `vscode`
+
+For Cline, if `CLINE_DIR` is set, the global path becomes `$CLINE_DIR/data/settings/cline_mcp_settings.json`.
 
 The CLI uses smart detection to find agents in your project directory and globally installed agents. See [Smart Detection](#smart-detection) for details.
 

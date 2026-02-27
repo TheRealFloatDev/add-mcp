@@ -42,6 +42,12 @@ function getPlatformPaths() {
 }
 
 const { appSupport, vscodePath, gooseConfigPath } = getPlatformPaths();
+const clineConfigPath = join(
+  process.env.CLINE_DIR || join(home, ".cline"),
+  "data",
+  "settings",
+  "cline_mcp_settings.json",
+);
 const copilotConfigPath = join(
   process.env.XDG_CONFIG_HOME || join(home, ".copilot"),
   "mcp-config.json",
@@ -161,6 +167,37 @@ function transformCursorConfig(
   return config;
 }
 
+function transformClineConfig(
+  _serverName: string,
+  config: McpServerConfig,
+): unknown {
+  if (config.url) {
+    const remoteConfig: Record<string, unknown> = {
+      url: config.url,
+      type: config.type === "sse" ? "sse" : "streamableHttp",
+      disabled: false,
+    };
+
+    if (config.headers && Object.keys(config.headers).length > 0) {
+      remoteConfig.headers = config.headers;
+    }
+
+    return remoteConfig;
+  }
+
+  const localConfig: Record<string, unknown> = {
+    command: config.command,
+    args: config.args || [],
+    disabled: false,
+  };
+
+  if (config.env && Object.keys(config.env).length > 0) {
+    localConfig.env = config.env;
+  }
+
+  return localConfig;
+}
+
 function transformGitHubCopilotCliConfig(
   _serverName: string,
   config: McpServerConfig,
@@ -200,6 +237,20 @@ function transformGitHubCopilotCliConfig(
 }
 
 export const agents: Record<AgentType, AgentConfig> = {
+  cline: {
+    name: "cline",
+    displayName: "Cline",
+    configPath: clineConfigPath,
+    projectDetectPaths: [], // Global only - no project support
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    detectGlobalInstall: async () => {
+      return existsSync(dirname(clineConfigPath));
+    },
+    transformConfig: transformClineConfig,
+  },
+
   "claude-code": {
     name: "claude-code",
     displayName: "Claude Code",

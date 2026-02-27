@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.0] - 2026-02-26
+
+- add `cline` agent support with installs written to `~/.cline/data/settings/cline_mcp_settings.json` (or `$CLINE_DIR/data/settings/cline_mcp_settings.json`)
+- map Cline remote transport values to its schema (`streamableHttp` and `sse`) and include enabled state defaults
+
 ## [1.2.2] - 2026-02-21
 
 - fix Goose remote HTTP/SSE header support and simplify header capability handling
