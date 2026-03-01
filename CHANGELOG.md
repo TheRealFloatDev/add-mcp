@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.0] - 2026-02-26
+
+- Add support for Cline VSCode Extension and Cline CLI
+
 ## [1.2.2] - 2026-02-21
 
 - fix Goose remote HTTP/SSE header support and simplify header capability handling

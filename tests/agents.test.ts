@@ -60,9 +60,11 @@ function cleanup() {
 // Agent Configuration Tests
 // ============================================
 
-test("getAgentTypes returns all 10 agents", () => {
+test("getAgentTypes returns all 12 agents", () => {
   const types = getAgentTypes();
-  assert.strictEqual(types.length, 10);
+  assert.strictEqual(types.length, 12);
+  assert.ok(types.includes("cline"));
+  assert.ok(types.includes("cline-cli"));
   assert.ok(types.includes("claude-code"));
   assert.ok(types.includes("claude-desktop"));
   assert.ok(types.includes("codex"));
@@ -113,6 +115,8 @@ test("supportsProjectConfig - returns true for project-capable agents", () => {
 });
 
 test("supportsProjectConfig - returns false for global-only agents", () => {
+  assert.strictEqual(supportsProjectConfig("cline"), false);
+  assert.strictEqual(supportsProjectConfig("cline-cli"), false);
   assert.strictEqual(supportsProjectConfig("claude-desktop"), false);
   assert.strictEqual(supportsProjectConfig("goose"), false);
 });
@@ -130,9 +134,11 @@ test("getProjectCapableAgents returns 8 agents", () => {
   assert.ok(projectAgents.includes("zed"));
 });
 
-test("getGlobalOnlyAgents returns 2 agents", () => {
+test("getGlobalOnlyAgents returns 4 agents", () => {
   const globalAgents = getGlobalOnlyAgents();
-  assert.strictEqual(globalAgents.length, 2);
+  assert.strictEqual(globalAgents.length, 4);
+  assert.ok(globalAgents.includes("cline"));
+  assert.ok(globalAgents.includes("cline-cli"));
   assert.ok(globalAgents.includes("claude-desktop"));
   assert.ok(globalAgents.includes("goose"));
 });
@@ -253,6 +259,8 @@ test("detectProjectAgents - does not detect global-only agents", () => {
   mkdirSync(join(tempDir, ".goose"));
 
   const detected = detectProjectAgents(tempDir);
+  assert.ok(!detected.includes("cline"));
+  assert.ok(!detected.includes("cline-cli"));
   assert.ok(!detected.includes("claude-desktop"));
   assert.ok(!detected.includes("goose"));
 });
@@ -273,6 +281,8 @@ test("isTransportSupported - all agents support stdio", () => {
 
 test("isTransportSupported - most agents support http", () => {
   const httpAgents: AgentType[] = [
+    "cline",
+    "cline-cli",
     "claude-code",
     "codex",
     "cursor",
@@ -295,6 +305,8 @@ test("isTransportSupported - most agents support http", () => {
 
 test("isTransportSupported - most agents support sse", () => {
   const sseAgents: AgentType[] = [
+    "cline",
+    "cline-cli",
     "claude-code",
     "codex",
     "cursor",
