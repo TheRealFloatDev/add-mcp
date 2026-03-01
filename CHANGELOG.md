@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.5.1] - 2026-03-01
+
+- update Antigravity to support remote MCP servers via `serverUrl` config
+
 ## [1.5.0] - 2026-02-28
 
 - Add support for Antigravity

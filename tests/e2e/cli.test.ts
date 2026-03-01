@@ -288,28 +288,44 @@ test("E2E CLI: stdio server to claude-desktop succeeds", () => {
   assert.strictEqual(server.command, "npx");
 });
 
-test("E2E CLI: remote server to antigravity errors with custom message", () => {
+test("E2E CLI: remote server to antigravity succeeds with serverUrl config", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();
 
   const result = runCli(
-    ["https://mcp.example.com/mcp", "-a", "antigravity", "-y"],
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "antigravity",
+      "-y",
+      "--name",
+      "remote",
+      "--header",
+      "Authorization: Bearer token",
+    ],
     projectDir,
     homeDir,
   );
 
-  assert.notStrictEqual(result.status, 0, "CLI should exit with non-zero");
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
 
-  const output = `${result.stdout}\n${result.stderr}`;
-  assert.match(
-    output,
-    /don't support http transport/,
-    "should report unsupported transport",
-  );
-  assert.match(output, /mcp-remote/, "should include mcp-remote guidance");
+  const configPath = join(homeDir, ".gemini", "antigravity", "mcp_config.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const servers = saved.mcpServers as Record<string, unknown>;
+  const server = servers.remote as Record<string, unknown>;
+  assert.strictEqual(server.serverUrl, "https://mcp.example.com/mcp");
+  assert.deepStrictEqual(server.headers, {
+    Authorization: "Bearer token",
+  });
 });
 
-test("E2E CLI: --all skips antigravity for remote server with custom message", () => {
+test("E2E CLI: --all includes antigravity for remote server", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();
 
@@ -321,13 +337,19 @@ test("E2E CLI: --all skips antigravity for remote server with custom message", (
 
   assert.strictEqual(result.status, 0, "CLI should succeed");
 
-  const output = `${result.stdout}\n${result.stderr}`;
-  assert.match(
-    output,
-    /Skipping agents.*Antigravity/,
-    "should warn about skipping Antigravity",
+  const configPath = join(homeDir, ".gemini", "antigravity", "mcp_config.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const servers = saved.mcpServers as Record<string, unknown>;
+  const antigravityRemoteServer = Object.values(servers).find((value) => {
+    const server = value as Record<string, unknown>;
+    return server.serverUrl === "https://mcp.example.com/mcp";
+  });
+  assert.ok(
+    antigravityRemoteServer,
+    "remote antigravity server should exist in mcpServers",
   );
-  assert.match(output, /mcp-remote/, "should include mcp-remote guidance");
 });
 
 test("E2E CLI: stdio server to antigravity succeeds", () => {

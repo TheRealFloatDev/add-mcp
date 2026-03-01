@@ -295,6 +295,7 @@ test("isTransportSupported - all agents support stdio", () => {
 
 test("isTransportSupported - most agents support http", () => {
   const httpAgents: AgentType[] = [
+    "antigravity",
     "cline",
     "cline-cli",
     "claude-code",
@@ -320,6 +321,7 @@ test("isTransportSupported - most agents support http", () => {
 
 test("isTransportSupported - most agents support sse", () => {
   const sseAgents: AgentType[] = [
+    "antigravity",
     "cline",
     "cline-cli",
     "claude-code",
@@ -343,7 +345,7 @@ test("isTransportSupported - most agents support sse", () => {
   }
 });
 
-test("isTransportSupported - antigravity only supports stdio", () => {
+test("isTransportSupported - antigravity supports stdio, http, and sse", () => {
   assert.strictEqual(
     isTransportSupported("antigravity", "stdio"),
     true,
@@ -351,22 +353,22 @@ test("isTransportSupported - antigravity only supports stdio", () => {
   );
   assert.strictEqual(
     isTransportSupported("antigravity", "http"),
-    false,
-    "antigravity should not support http",
+    true,
+    "antigravity should support http",
   );
   assert.strictEqual(
     isTransportSupported("antigravity", "sse"),
-    false,
-    "antigravity should not support sse",
+    true,
+    "antigravity should support sse",
   );
 });
 
-test("antigravity has unsupportedTransportMessage", () => {
+test("antigravity has no unsupportedTransportMessage", () => {
   const msg = agents.antigravity.unsupportedTransportMessage;
-  assert.ok(msg, "antigravity should have an unsupportedTransportMessage");
-  assert.ok(
-    msg.includes("mcp-remote"),
-    "message should mention mcp-remote guidance",
+  assert.strictEqual(
+    msg,
+    undefined,
+    "antigravity should not have an unsupportedTransportMessage",
   );
 });
 

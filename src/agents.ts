@@ -211,6 +211,34 @@ function transformClineConfig(
   return localConfig;
 }
 
+function transformAntigravityConfig(
+  _serverName: string,
+  config: McpServerConfig,
+): unknown {
+  if (config.url) {
+    const remoteConfig: Record<string, unknown> = {
+      serverUrl: config.url,
+    };
+
+    if (config.headers && Object.keys(config.headers).length > 0) {
+      remoteConfig.headers = config.headers;
+    }
+
+    return remoteConfig;
+  }
+
+  const localConfig: Record<string, unknown> = {
+    command: config.command,
+    args: config.args || [],
+  };
+
+  if (config.env && Object.keys(config.env).length > 0) {
+    localConfig.env = config.env;
+  }
+
+  return localConfig;
+}
+
 function transformGitHubCopilotCliConfig(
   _serverName: string,
   config: McpServerConfig,
@@ -277,12 +305,11 @@ export const agents: Record<AgentType, AgentConfig> = {
     projectDetectPaths: [], // Global only - no project support
     configKey: "mcpServers",
     format: "json",
-    supportedTransports: ["stdio"],
-    unsupportedTransportMessage:
-      "Antigravity only supports local (stdio) servers via its config file. Use mcp-remote to connect to remote servers.",
+    supportedTransports: ["stdio", "http", "sse"],
     detectGlobalInstall: async () => {
       return existsSync(join(home, ".gemini"));
     },
+    transformConfig: transformAntigravityConfig,
   },
 
   cline: {
