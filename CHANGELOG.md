@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.4.0] - 2026-02-28
+
+- Add support for MCPorter
+
 ## [1.3.0] - 2026-02-26
 
 - Add support for Cline VSCode Extension and Cline CLI

@@ -148,10 +148,17 @@ function getConfigPath(
   agent: AgentConfig,
   options: InstallOptions = {},
 ): string {
-  if (options.local && agent.localConfigPath) {
-    const cwd = options.cwd || process.cwd();
+  const local = Boolean(options.local);
+  const cwd = options.cwd || process.cwd();
+
+  if (agent.resolveConfigPath) {
+    return agent.resolveConfigPath(agent, { local, cwd });
+  }
+
+  if (local && agent.localConfigPath) {
     return join(cwd, agent.localConfigPath);
   }
+
   return agent.configPath;
 }
 
