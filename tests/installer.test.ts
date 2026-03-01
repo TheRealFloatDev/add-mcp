@@ -7,7 +7,14 @@
  */
 
 import assert from "node:assert";
-import { mkdtempSync, rmSync, existsSync, readFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  rmSync,
+  existsSync,
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -428,6 +435,82 @@ test("installServer - cline extension global uses VS Code global storage path", 
     assert.strictEqual(server.disabled, false);
   } finally {
     agents.cline.configPath = originalPath;
+  }
+});
+
+test("installServer - mcporter local writes config/mcporter.json", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed);
+
+  const results = installServer("postgres", config, ["mcporter"], {
+    routing: new Map<AgentType, "local" | "global">([["mcporter", "local"]]),
+    cwd: tempDir,
+  });
+
+  const result = results.get("mcporter");
+  assert.ok(result?.success);
+  assert.strictEqual(result?.path, join(tempDir, "config", "mcporter.json"));
+  assert.strictEqual(
+    existsSync(join(tempDir, "config", "mcporter.json")),
+    true,
+  );
+});
+
+test("installServer - mcporter global prefers existing mcporter.jsonc", () => {
+  const tempDir = createTempDir();
+  const originalPath = agents.mcporter.configPath;
+  agents.mcporter.configPath = join(tempDir, ".mcporter", "mcporter.json");
+  mkdirSync(join(tempDir, ".mcporter"), { recursive: true });
+  writeFileSync(join(tempDir, ".mcporter", "mcporter.jsonc"), "{}");
+
+  try {
+    const parsed = parseSource("https://mcp.example.com/mcp");
+    const config = buildServerConfig(parsed);
+    const results = installServer("example", config, ["mcporter"], {
+      routing: new Map<AgentType, "local" | "global">([["mcporter", "global"]]),
+      cwd: tempDir,
+    });
+
+    const result = results.get("mcporter");
+    assert.ok(result?.success);
+    assert.strictEqual(
+      result?.path,
+      join(tempDir, ".mcporter", "mcporter.jsonc"),
+    );
+    assert.strictEqual(
+      existsSync(join(tempDir, ".mcporter", "mcporter.jsonc")),
+      true,
+    );
+  } finally {
+    agents.mcporter.configPath = originalPath;
+  }
+});
+
+test("installServer - mcporter global prefers mcporter.json over mcporter.jsonc", () => {
+  const tempDir = createTempDir();
+  const originalPath = agents.mcporter.configPath;
+  agents.mcporter.configPath = join(tempDir, ".mcporter", "mcporter.json");
+  mkdirSync(join(tempDir, ".mcporter"), { recursive: true });
+  writeFileSync(join(tempDir, ".mcporter", "mcporter.json"), "{}");
+  writeFileSync(join(tempDir, ".mcporter", "mcporter.jsonc"), "{}");
+
+  try {
+    const parsed = parseSource("https://mcp.example.com/mcp");
+    const config = buildServerConfig(parsed);
+    const results = installServer("example", config, ["mcporter"], {
+      routing: new Map<AgentType, "local" | "global">([["mcporter", "global"]]),
+      cwd: tempDir,
+    });
+
+    const result = results.get("mcporter");
+    assert.ok(result?.success);
+    assert.strictEqual(
+      result?.path,
+      join(tempDir, ".mcporter", "mcporter.json"),
+    );
+  } finally {
+    agents.mcporter.configPath = originalPath;
   }
 });
 

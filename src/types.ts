@@ -8,6 +8,7 @@ export type AgentType =
   | "gemini-cli"
   | "goose"
   | "github-copilot-cli"
+  | "mcporter"
   | "opencode"
   | "vscode"
   | "zed";
@@ -43,6 +44,11 @@ export interface AgentConfig {
   unsupportedTransportMessage?: string;
   /** Function to detect if agent is installed globally */
   detectGlobalInstall: () => Promise<boolean>;
+  /** Optional function to dynamically resolve config path */
+  resolveConfigPath?: (
+    agent: AgentConfig,
+    options: { local: boolean; cwd: string },
+  ) => string;
   /** Optional function to transform server config to agent-specific format */
   transformConfig?: (
     serverName: string,

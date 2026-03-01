@@ -109,6 +109,50 @@ test("E2E CLI: --gitignore with --global warns and does not write project .gitig
   assert.strictEqual(existsSync(join(homeDir, ".cursor", "mcp.json")), true);
 });
 
+test("E2E CLI: mcporter default install writes project config", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    ["https://mcp.example.com/mcp", "-a", "mcporter", "-y"],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  assert.strictEqual(
+    existsSync(join(projectDir, "config", "mcporter.json")),
+    true,
+  );
+});
+
+test("E2E CLI: mcporter global install writes home config", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    ["https://mcp.example.com/mcp", "-a", "mcporter", "-g", "-y"],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  assert.strictEqual(
+    existsSync(join(homeDir, ".mcporter", "mcporter.json")),
+    true,
+  );
+});
+
 test("E2E CLI: Goose HTTP install with headers", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();

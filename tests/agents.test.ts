@@ -60,9 +60,9 @@ function cleanup() {
 // Agent Configuration Tests
 // ============================================
 
-test("getAgentTypes returns all 12 agents", () => {
+test("getAgentTypes returns all 13 agents", () => {
   const types = getAgentTypes();
-  assert.strictEqual(types.length, 12);
+  assert.strictEqual(types.length, 13);
   assert.ok(types.includes("cline"));
   assert.ok(types.includes("cline-cli"));
   assert.ok(types.includes("claude-code"));
@@ -72,6 +72,7 @@ test("getAgentTypes returns all 12 agents", () => {
   assert.ok(types.includes("gemini-cli"));
   assert.ok(types.includes("goose"));
   assert.ok(types.includes("github-copilot-cli"));
+  assert.ok(types.includes("mcporter"));
   assert.ok(types.includes("opencode"));
   assert.ok(types.includes("vscode"));
   assert.ok(types.includes("zed"));
@@ -110,6 +111,7 @@ test("supportsProjectConfig - returns true for project-capable agents", () => {
   assert.strictEqual(supportsProjectConfig("opencode"), true);
   assert.strictEqual(supportsProjectConfig("gemini-cli"), true);
   assert.strictEqual(supportsProjectConfig("github-copilot-cli"), true);
+  assert.strictEqual(supportsProjectConfig("mcporter"), true);
   assert.strictEqual(supportsProjectConfig("codex"), true);
   assert.strictEqual(supportsProjectConfig("zed"), true);
 });
@@ -121,15 +123,16 @@ test("supportsProjectConfig - returns false for global-only agents", () => {
   assert.strictEqual(supportsProjectConfig("goose"), false);
 });
 
-test("getProjectCapableAgents returns 8 agents", () => {
+test("getProjectCapableAgents returns 9 agents", () => {
   const projectAgents = getProjectCapableAgents();
-  assert.strictEqual(projectAgents.length, 8);
+  assert.strictEqual(projectAgents.length, 9);
   assert.ok(projectAgents.includes("claude-code"));
   assert.ok(projectAgents.includes("cursor"));
   assert.ok(projectAgents.includes("vscode"));
   assert.ok(projectAgents.includes("opencode"));
   assert.ok(projectAgents.includes("gemini-cli"));
   assert.ok(projectAgents.includes("github-copilot-cli"));
+  assert.ok(projectAgents.includes("mcporter"));
   assert.ok(projectAgents.includes("codex"));
   assert.ok(projectAgents.includes("zed"));
 });
@@ -237,6 +240,15 @@ test("detectProjectAgents - detects .zed directory", () => {
   assert.ok(detected.includes("zed"));
 });
 
+test("detectProjectAgents - detects config/mcporter.json", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, "config"), { recursive: true });
+  writeFileSync(join(tempDir, "config", "mcporter.json"), "{}");
+
+  const detected = detectProjectAgents(tempDir);
+  assert.ok(detected.includes("mcporter"));
+});
+
 test("detectProjectAgents - detects multiple agents", () => {
   const tempDir = createTempDir();
   mkdirSync(join(tempDir, ".cursor"));
@@ -289,6 +301,7 @@ test("isTransportSupported - most agents support http", () => {
     "gemini-cli",
     "github-copilot-cli",
     "goose",
+    "mcporter",
     "opencode",
     "vscode",
     "zed",
@@ -313,6 +326,7 @@ test("isTransportSupported - most agents support sse", () => {
     "gemini-cli",
     "github-copilot-cli",
     "goose",
+    "mcporter",
     "opencode",
     "vscode",
     "zed",

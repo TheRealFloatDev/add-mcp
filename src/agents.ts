@@ -243,6 +243,26 @@ function transformGitHubCopilotCliConfig(
   return localConfig;
 }
 
+function resolveMcporterConfigPath(
+  agent: AgentConfig,
+  options: { local: boolean; cwd: string },
+): string {
+  if (options.local && agent.localConfigPath) {
+    return join(options.cwd, agent.localConfigPath);
+  }
+
+  const globalJsonPath = agent.configPath;
+  const globalJsoncPath = join(dirname(globalJsonPath), "mcporter.jsonc");
+
+  if (existsSync(globalJsonPath)) {
+    return globalJsonPath;
+  }
+  if (existsSync(globalJsoncPath)) {
+    return globalJsoncPath;
+  }
+  return globalJsonPath;
+}
+
 export const agents: Record<AgentType, AgentConfig> = {
   cline: {
     name: "cline",
@@ -376,6 +396,21 @@ export const agents: Record<AgentType, AgentConfig> = {
       return existsSync(dirname(copilotConfigPath));
     },
     transformConfig: transformGitHubCopilotCliConfig,
+  },
+
+  mcporter: {
+    name: "mcporter",
+    displayName: "MCPorter",
+    configPath: join(home, ".mcporter", "mcporter.json"),
+    localConfigPath: "config/mcporter.json",
+    projectDetectPaths: ["config/mcporter.json"],
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    detectGlobalInstall: async () => {
+      return existsSync(join(home, ".mcporter"));
+    },
+    resolveConfigPath: resolveMcporterConfigPath,
   },
 
   opencode: {
