@@ -338,10 +338,10 @@ test("installServer - github-copilot-cli global uses mcpServers key and CLI sche
   }
 });
 
-test("installServer - cline global uses mcpServers key and Cline schema", () => {
+test("installServer - cline-cli global uses mcpServers key and Cline schema", () => {
   const tempDir = createTempDir();
-  const originalPath = agents.cline.configPath;
-  agents.cline.configPath = join(
+  const originalPath = agents["cline-cli"].configPath;
+  agents["cline-cli"].configPath = join(
     tempDir,
     "data",
     "settings",
@@ -357,12 +357,14 @@ test("installServer - cline global uses mcpServers key and Cline schema", () => 
       },
     });
 
-    const results = installServer("example", config, ["cline"], {
-      routing: new Map<AgentType, "local" | "global">([["cline", "global"]]),
+    const results = installServer("example", config, ["cline-cli"], {
+      routing: new Map<AgentType, "local" | "global">([
+        ["cline-cli", "global"],
+      ]),
       cwd: tempDir,
     });
 
-    const result = results.get("cline");
+    const result = results.get("cline-cli");
     assert.ok(result?.success);
 
     const saved = readJsonConfig(
@@ -377,6 +379,53 @@ test("installServer - cline global uses mcpServers key and Cline schema", () => 
     assert.deepStrictEqual(server.headers, {
       Authorization: "Bearer token",
     });
+  } finally {
+    agents["cline-cli"].configPath = originalPath;
+  }
+});
+
+test("installServer - cline extension global uses VS Code global storage path", () => {
+  const tempDir = createTempDir();
+  const originalPath = agents.cline.configPath;
+  agents.cline.configPath = join(
+    tempDir,
+    "Code",
+    "User",
+    "globalStorage",
+    "saoudrizwan.claude-dev",
+    "settings",
+    "cline_mcp_settings.json",
+  );
+
+  try {
+    const parsed = parseSource("https://mcp.example.com/mcp");
+    const config = buildServerConfig(parsed);
+
+    const results = installServer("example", config, ["cline"], {
+      routing: new Map<AgentType, "local" | "global">([["cline", "global"]]),
+      cwd: tempDir,
+    });
+
+    const result = results.get("cline");
+    assert.ok(result?.success);
+
+    const saved = readJsonConfig(
+      join(
+        tempDir,
+        "Code",
+        "User",
+        "globalStorage",
+        "saoudrizwan.claude-dev",
+        "settings",
+        "cline_mcp_settings.json",
+      ),
+    );
+    const mcpServers = saved.mcpServers as Record<string, unknown>;
+    const server = mcpServers.example as Record<string, unknown>;
+
+    assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+    assert.strictEqual(server.type, "streamableHttp");
+    assert.strictEqual(server.disabled, false);
   } finally {
     agents.cline.configPath = originalPath;
   }

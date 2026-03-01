@@ -1,5 +1,6 @@
 export type AgentType =
   | "cline"
+  | "cline-cli"
   | "claude-code"
   | "claude-desktop"
   | "codex"
@@ -12,6 +13,7 @@ export type AgentType =
   | "zed";
 
 export const agentAliases: Record<string, AgentType> = {
+  "cline-vscode": "cline",
   gemini: "gemini-cli",
   "github-copilot": "vscode",
 };

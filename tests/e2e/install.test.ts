@@ -531,7 +531,7 @@ test("E2E: Zed config transformation - local server", () => {
 // E2E Tests: Cline (transformed format)
 // ============================================
 
-test("E2E: Cline config transformation - remote http server", () => {
+test("E2E: Cline VSCode extension config transformation - remote http server", () => {
   const parsed = parseSource("https://mcp.example.com/mcp");
   const config = buildServerConfig(parsed);
 
@@ -546,11 +546,26 @@ test("E2E: Cline config transformation - remote http server", () => {
   assert.strictEqual(transformed.disabled, false);
 });
 
-test("E2E: Cline config transformation - local stdio server", () => {
+test("E2E: Cline VSCode extension config transformation - local stdio server", () => {
   const parsed = parseSource("mcp-server-postgres");
   const config = buildServerConfig(parsed);
 
   const clineAgent = agents.cline;
+  const transformed = clineAgent.transformConfig!("postgres", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.strictEqual(transformed.command, "npx");
+  assert.deepStrictEqual(transformed.args, ["-y", "mcp-server-postgres"]);
+  assert.strictEqual(transformed.disabled, false);
+});
+
+test("E2E: Cline CLI config transformation - local stdio server", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed);
+
+  const clineAgent = agents["cline-cli"];
   const transformed = clineAgent.transformConfig!("postgres", config) as Record<
     string,
     unknown

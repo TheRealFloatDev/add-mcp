@@ -2,7 +2,7 @@
 
 Add MCP servers to your favorite coding agents with a single command.
 
-Supports **Cline**, **Claude Code**, **Codex**, **Cursor**, **OpenCode**, **VSCode** and [5 more](#supported-agents).
+Supports **Claude Code**, **Codex**, **Cursor**, **OpenCode**, **VSCode** and [7 more](#supported-agents).
 
 ## Install an MCP Server
 
@@ -136,23 +136,22 @@ Header support is available for remote installs across all supported agents.
 
 MCP servers can be installed to any of these agents:
 
-| Agent              | `--agent`            | Project Path            | Global Path                                                       |
-| ------------------ | -------------------- | ----------------------- | ----------------------------------------------------------------- |
-| Cline              | `cline`              | -                       | `~/.cline/data/settings/cline_mcp_settings.json`                  |
-| Claude Code        | `claude-code`        | `.mcp.json`             | `~/.claude.json`                                                  |
-| Claude Desktop     | `claude-desktop`     | -                       | `~/Library/Application Support/Claude/claude_desktop_config.json` |
-| Codex              | `codex`              | `.codex/config.toml`    | `~/.codex/config.toml`                                            |
-| Cursor             | `cursor`             | `.cursor/mcp.json`      | `~/.cursor/mcp.json`                                              |
-| Gemini CLI         | `gemini-cli`         | `.gemini/settings.json` | `~/.gemini/settings.json`                                         |
-| Goose              | `goose`              | `.goose/config.yaml`    | `~/.config/goose/config.yaml`                                     |
-| GitHub Copilot CLI | `github-copilot-cli` | `.vscode/mcp.json`      | `~/.copilot/mcp-config.json`                                      |
-| OpenCode           | `opencode`           | `opencode.json`         | `~/.config/opencode/opencode.json`                                |
-| VS Code            | `vscode`             | `.vscode/mcp.json`      | `~/Library/Application Support/Code/User/mcp.json`                |
-| Zed                | `zed`                | `.zed/settings.json`    | `~/Library/Application Support/Zed/settings.json`                 |
+| Agent                  | `--agent`            | Project Path            | Global Path                                                                                                     |
+| ---------------------- | -------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Cline VSCode Extension | `cline`              | -                       | `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` |
+| Cline CLI              | `cline-cli`          | -                       | `~/.cline/data/settings/cline_mcp_settings.json`                                                                |
+| Claude Code            | `claude-code`        | `.mcp.json`             | `~/.claude.json`                                                                                                |
+| Claude Desktop         | `claude-desktop`     | -                       | `~/Library/Application Support/Claude/claude_desktop_config.json`                                               |
+| Codex                  | `codex`              | `.codex/config.toml`    | `~/.codex/config.toml`                                                                                          |
+| Cursor                 | `cursor`             | `.cursor/mcp.json`      | `~/.cursor/mcp.json`                                                                                            |
+| Gemini CLI             | `gemini-cli`         | `.gemini/settings.json` | `~/.gemini/settings.json`                                                                                       |
+| Goose                  | `goose`              | `.goose/config.yaml`    | `~/.config/goose/config.yaml`                                                                                   |
+| GitHub Copilot CLI     | `github-copilot-cli` | `.vscode/mcp.json`      | `~/.copilot/mcp-config.json`                                                                                    |
+| OpenCode               | `opencode`           | `opencode.json`         | `~/.config/opencode/opencode.json`                                                                              |
+| VS Code                | `vscode`             | `.vscode/mcp.json`      | `~/Library/Application Support/Code/User/mcp.json`                                                              |
+| Zed                    | `zed`                | `.zed/settings.json`    | `~/Library/Application Support/Zed/settings.json`                                                               |
 
-**Aliases:** `gemini` → `gemini-cli`, `github-copilot` → `vscode`
-
-For Cline, if `CLINE_DIR` is set, the global path becomes `$CLINE_DIR/data/settings/cline_mcp_settings.json`.
+**Aliases:** `cline-vscode` → `cline`, `gemini` → `gemini-cli`, `github-copilot` → `vscode`
 
 The CLI uses smart detection to find agents in your project directory and globally installed agents. See [Smart Detection](#smart-detection) for details.
 

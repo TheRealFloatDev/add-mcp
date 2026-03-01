@@ -42,9 +42,16 @@ function getPlatformPaths() {
 }
 
 const { appSupport, vscodePath, gooseConfigPath } = getPlatformPaths();
-const clineConfigPath = join(
+const clineCliConfigPath = join(
   process.env.CLINE_DIR || join(home, ".cline"),
   "data",
+  "settings",
+  "cline_mcp_settings.json",
+);
+const clineExtensionConfigPath = join(
+  vscodePath,
+  "globalStorage",
+  "saoudrizwan.claude-dev",
   "settings",
   "cline_mcp_settings.json",
 );
@@ -239,14 +246,28 @@ function transformGitHubCopilotCliConfig(
 export const agents: Record<AgentType, AgentConfig> = {
   cline: {
     name: "cline",
-    displayName: "Cline",
-    configPath: clineConfigPath,
+    displayName: "Cline VSCode Extension",
+    configPath: clineExtensionConfigPath,
     projectDetectPaths: [], // Global only - no project support
     configKey: "mcpServers",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
     detectGlobalInstall: async () => {
-      return existsSync(dirname(clineConfigPath));
+      return existsSync(dirname(clineExtensionConfigPath));
+    },
+    transformConfig: transformClineConfig,
+  },
+
+  "cline-cli": {
+    name: "cline-cli",
+    displayName: "Cline CLI",
+    configPath: clineCliConfigPath,
+    projectDetectPaths: [], // Global only - no project support
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    detectGlobalInstall: async () => {
+      return existsSync(dirname(clineCliConfigPath));
     },
     transformConfig: transformClineConfig,
   },

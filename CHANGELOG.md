@@ -2,8 +2,9 @@
 
 ## [1.3.0] - 2026-02-26
 
-- add `cline` agent support with installs written to `~/.cline/data/settings/cline_mcp_settings.json` (or `$CLINE_DIR/data/settings/cline_mcp_settings.json`)
-- map Cline remote transport values to its schema (`streamableHttp` and `sse`) and include enabled state defaults
+- add split Cline support:
+  - `cline` (Cline VSCode Extension) with installs written to VS Code global storage: `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
+  - `cline-cli` (Cline CLI) with installs written to `~/.cline/data/settings/cline_mcp_settings.json` (or `$CLINE_DIR/data/settings/cline_mcp_settings.json`)
 
 ## [1.2.2] - 2026-02-21
 
