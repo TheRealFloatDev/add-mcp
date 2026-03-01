@@ -125,7 +125,10 @@ test("E2E CLI: mcporter default install writes project config", () => {
     );
   }
 
-  assert.strictEqual(existsSync(join(projectDir, "config", "mcporter.json")), true);
+  assert.strictEqual(
+    existsSync(join(projectDir, "config", "mcporter.json")),
+    true,
+  );
 });
 
 test("E2E CLI: mcporter global install writes home config", () => {

@@ -451,7 +451,10 @@ test("installServer - mcporter local writes config/mcporter.json", () => {
   const result = results.get("mcporter");
   assert.ok(result?.success);
   assert.strictEqual(result?.path, join(tempDir, "config", "mcporter.json"));
-  assert.strictEqual(existsSync(join(tempDir, "config", "mcporter.json")), true);
+  assert.strictEqual(
+    existsSync(join(tempDir, "config", "mcporter.json")),
+    true,
+  );
 });
 
 test("installServer - mcporter global prefers existing mcporter.jsonc", () => {
@@ -471,8 +474,14 @@ test("installServer - mcporter global prefers existing mcporter.jsonc", () => {
 
     const result = results.get("mcporter");
     assert.ok(result?.success);
-    assert.strictEqual(result?.path, join(tempDir, ".mcporter", "mcporter.jsonc"));
-    assert.strictEqual(existsSync(join(tempDir, ".mcporter", "mcporter.jsonc")), true);
+    assert.strictEqual(
+      result?.path,
+      join(tempDir, ".mcporter", "mcporter.jsonc"),
+    );
+    assert.strictEqual(
+      existsSync(join(tempDir, ".mcporter", "mcporter.jsonc")),
+      true,
+    );
   } finally {
     agents.mcporter.configPath = originalPath;
   }
@@ -496,7 +505,10 @@ test("installServer - mcporter global prefers mcporter.json over mcporter.jsonc"
 
     const result = results.get("mcporter");
     assert.ok(result?.success);
-    assert.strictEqual(result?.path, join(tempDir, ".mcporter", "mcporter.json"));
+    assert.strictEqual(
+      result?.path,
+      join(tempDir, ".mcporter", "mcporter.json"),
+    );
   } finally {
     agents.mcporter.configPath = originalPath;
   }
