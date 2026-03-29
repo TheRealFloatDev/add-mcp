@@ -142,6 +142,23 @@ test("buildServerConfig - package with version", () => {
   assert.deepStrictEqual(config.args, ["-y", "mcp-server@1.0.0"]);
 });
 
+test("buildServerConfig - package includes env when provided", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    env: {
+      API_KEY: "secret",
+      DATABASE_URL: "postgres://localhost/my-db",
+    },
+  });
+
+  assert.strictEqual(config.command, "npx");
+  assert.deepStrictEqual(config.args, ["-y", "mcp-server-postgres"]);
+  assert.deepStrictEqual(config.env, {
+    API_KEY: "secret",
+    DATABASE_URL: "postgres://localhost/my-db",
+  });
+});
+
 // buildServerConfig tests - Command
 test("buildServerConfig - npx command", () => {
   const parsed = parseSource("npx -y @org/mcp-server");
@@ -181,6 +198,36 @@ test("buildServerConfig - command with multiple args", () => {
     "postgres://localhost",
     "--verbose",
   ]);
+});
+
+test("buildServerConfig - command includes env when provided", () => {
+  const parsed = parseSource("node /path/to/server.js --port 3000");
+  const config = buildServerConfig(parsed, {
+    env: {
+      NODE_ENV: "production",
+      FOO: "bar=baz",
+    },
+  });
+
+  assert.strictEqual(config.command, "node");
+  assert.deepStrictEqual(config.args, ["/path/to/server.js", "--port", "3000"]);
+  assert.deepStrictEqual(config.env, {
+    NODE_ENV: "production",
+    FOO: "bar=baz",
+  });
+});
+
+test("buildServerConfig - remote source ignores env", () => {
+  const parsed = parseSource("https://mcp.example.com/api");
+  const config = buildServerConfig(parsed, {
+    env: {
+      API_KEY: "secret",
+    },
+  });
+
+  assert.strictEqual(config.type, "http");
+  assert.strictEqual(config.url, "https://mcp.example.com/api");
+  assert.strictEqual(config.env, undefined);
 });
 
 // ============================================

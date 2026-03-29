@@ -35,6 +35,8 @@ export interface BuildServerConfigOptions {
   transport?: TransportType;
   /** HTTP headers for remote servers */
   headers?: Record<string, string>;
+  /** Environment variables for local stdio servers */
+  env?: Record<string, string>;
 }
 
 export interface UpdateGitignoreOptions {
@@ -68,17 +70,28 @@ export function buildServerConfig(
     const parts = parsed.value.split(" ");
     const command = parts[0]!;
     const args = parts.slice(1);
-
-    return {
+    const config: McpServerConfig = {
       command,
       args,
     };
+
+    if (options.env && Object.keys(options.env).length > 0) {
+      config.env = options.env;
+    }
+
+    return config;
   }
 
-  return {
+  const config: McpServerConfig = {
     command: "npx",
     args: ["-y", parsed.value],
   };
+
+  if (options.env && Object.keys(options.env).length > 0) {
+    config.env = options.env;
+  }
+
+  return config;
 }
 
 export function updateGitignoreWithPaths(

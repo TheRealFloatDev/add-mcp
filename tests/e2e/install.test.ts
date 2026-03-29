@@ -273,6 +273,34 @@ test("E2E: Install local server to OpenCode - transformed format", () => {
   assert.strictEqual(serverConfig.enabled, true);
 });
 
+test("E2E: Install local server to OpenCode maps env to environment", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    env: {
+      API_KEY: "secret",
+      DATABASE_URL: "postgres://localhost/test",
+    },
+  });
+
+  const result = installServerForAgent("postgres", config, "opencode", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const configPath = join(tempDir, "opencode.json");
+  const savedConfig = readJsonConfig(configPath);
+  const mcp = savedConfig.mcp as Record<string, unknown>;
+
+  const serverConfig = mcp.postgres as Record<string, unknown>;
+  assert.deepStrictEqual(serverConfig.environment, {
+    API_KEY: "secret",
+    DATABASE_URL: "postgres://localhost/test",
+  });
+});
+
 test("E2E: Install to Gemini CLI (local)", () => {
   const tempDir = createTempDir();
   const parsed = parseSource("mcp-server-github");
@@ -374,6 +402,24 @@ test("E2E: Install to Goose (YAML format, transformed) - local server", () => {
   ]);
   assert.strictEqual((transformed as Record<string, unknown>).type, "stdio");
   assert.strictEqual((transformed as Record<string, unknown>).enabled, true);
+});
+
+test("E2E: Install to Goose (YAML format, transformed) maps env to envs", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    env: {
+      API_KEY: "secret",
+      NESTED: "value=with=equals",
+    },
+  });
+
+  const gooseAgent = agents.goose;
+  const transformed = gooseAgent.transformConfig!("postgres", config);
+
+  assert.deepStrictEqual((transformed as Record<string, unknown>).envs, {
+    API_KEY: "secret",
+    NESTED: "value=with=equals",
+  });
 });
 
 test("E2E: Install to Goose (YAML format, transformed) - remote server (http)", () => {
@@ -527,6 +573,26 @@ test("E2E: Zed config transformation - local server", () => {
   assert.deepStrictEqual(transformed.args, ["-y", "mcp-server-postgres"]);
 });
 
+test("E2E: Zed config transformation - local server includes env", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    env: {
+      TOKEN: "abc123",
+    },
+  });
+
+  const zedAgent = agents.zed;
+
+  const transformed = zedAgent.transformConfig!("postgres", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.deepStrictEqual(transformed.env, {
+    TOKEN: "abc123",
+  });
+});
+
 // ============================================
 // E2E Tests: Cline (transformed format)
 // ============================================
@@ -559,6 +625,25 @@ test("E2E: Cline VSCode extension config transformation - local stdio server", (
   assert.strictEqual(transformed.command, "npx");
   assert.deepStrictEqual(transformed.args, ["-y", "mcp-server-postgres"]);
   assert.strictEqual(transformed.disabled, false);
+});
+
+test("E2E: Cline VSCode extension config transformation - local stdio includes env", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    env: {
+      API_KEY: "secret",
+    },
+  });
+
+  const clineAgent = agents.cline;
+  const transformed = clineAgent.transformConfig!("postgres", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.deepStrictEqual(transformed.env, {
+    API_KEY: "secret",
+  });
 });
 
 test("E2E: Cline CLI config transformation - local stdio server", () => {
@@ -629,6 +714,26 @@ test("E2E: Codex config transformation - local server", () => {
 
   assert.strictEqual(transformed.command, "npx");
   assert.deepStrictEqual(transformed.args, ["-y", "mcp-server-postgres"]);
+});
+
+test("E2E: Codex config transformation - local server includes env", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    env: {
+      OPENAI_API_KEY: "secret",
+    },
+  });
+
+  const codexAgent = agents.codex;
+
+  const transformed = codexAgent.transformConfig!("postgres", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.deepStrictEqual(transformed.env, {
+    OPENAI_API_KEY: "secret",
+  });
 });
 
 test("E2E: Write TOML config file (Codex format)", () => {

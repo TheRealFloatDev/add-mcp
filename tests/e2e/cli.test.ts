@@ -386,6 +386,104 @@ test("E2E CLI: stdio server to antigravity succeeds", () => {
   assert.strictEqual(server.command, "npx");
 });
 
+test("E2E CLI: local stdio install supports repeated --env", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "@modelcontextprotocol/server-filesystem",
+      "-a",
+      "cursor",
+      "-y",
+      "--name",
+      "filesystem",
+      "--env",
+      "API_KEY=secret",
+      "--env",
+      "NESTED=value=with=equals",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(projectDir, ".cursor", "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const servers = saved.mcpServers as Record<string, unknown>;
+  const server = servers.filesystem as Record<string, unknown>;
+
+  assert.strictEqual(server.command, "npx");
+  assert.deepStrictEqual(server.env, {
+    API_KEY: "secret",
+    NESTED: "value=with=equals",
+  });
+});
+
+test("E2E CLI: invalid --env format exits with error", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "@modelcontextprotocol/server-filesystem",
+      "-a",
+      "cursor",
+      "-y",
+      "--env",
+      "INVALID_ENV",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  assert.notStrictEqual(result.status, 0, "CLI should exit with non-zero");
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /Invalid --env value\(s\)/);
+  assert.match(output, /Use "KEY=VALUE" format\./);
+});
+
+test("E2E CLI: remote install with --env warns and succeeds", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "cursor",
+      "-y",
+      "--env",
+      "API_KEY=secret",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(
+    output,
+    /--env is only used for local\/package\/command installs, ignoring/,
+  );
+
+  const configPath = join(projectDir, ".cursor", "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+});
+
 cleanup();
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

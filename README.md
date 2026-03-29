@@ -43,6 +43,9 @@ npx add-mcp "npx -y @org/mcp-server --flag value"
 # Node.js script
 npx add-mcp "node /path/to/server.js --port 3000"
 
+# Local stdio server with environment variables (repeatable)
+npx add-mcp @modelcontextprotocol/server-filesystem --env "API_KEY=secret" --env "DATABASE_URL=postgres://localhost/app"
+
 # Install for Cursor and Claude Code
 npx add-mcp https://mcp.example.com/mcp -a cursor -a claude-code
 
@@ -68,6 +71,7 @@ npx add-mcp https://mcp.example.com/mcp -a cursor -y --gitignore
 | `-t, --transport <type>` | Transport type for remote servers: `http` (default), `sse`               |
 | `--type <type>`          | Alias for `--transport`                                                  |
 | `--header <header>`      | HTTP header for remote servers (repeatable, `Key: Value`)                |
+| `--env <env>`            | Env var for local stdio servers (repeatable, `KEY=VALUE`)                |
 | `-n, --name <name>`      | Server name (auto-inferred if not provided)                              |
 | `-y, --yes`              | Skip all confirmation prompts                                            |
 | `--all`                  | Install to all agents                                                    |
@@ -131,6 +135,11 @@ Note that some agents like Cursor and opencode do not require the `type` informa
 
 Use `--header` to pass custom headers for remote servers. The flag can be repeated.
 Header support is available for remote installs across all supported agents.
+
+## Environment Variables
+
+Use `--env` to pass environment variables for local stdio servers (packages/commands). The flag can be repeated and expects `KEY=VALUE`.
+If `--env` is provided for a remote URL install, it is ignored with a warning.
 
 ## Supported Agents
 
