@@ -11,9 +11,11 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import {
+  getFindRegistries,
   getLastSelectedAgents,
   getMcpLockPath,
   readMcpLock,
+  saveFindRegistries,
   saveSelectedAgents,
 } from "../src/mcp-lock.js";
 
@@ -86,6 +88,35 @@ async function run() {
     const lock = await readMcpLock();
     assert.strictEqual(lock.version, 1);
     assert.strictEqual(lock.lastSelectedAgents, undefined);
+  });
+
+  await test("saveFindRegistries persists registry selections", async () => {
+    setupTempHome();
+    await saveFindRegistries([
+      {
+        id: "verified-essentials",
+        label: "Verified essentials",
+        serversUrl: "http://localhost:3000/api/v1/servers",
+      },
+      {
+        id: "official-anthropic-registry",
+        label: "Official Anthropic registry",
+        serversUrl: "https://registry.modelcontextprotocol.io/v0.1/servers",
+      },
+    ]);
+    const registries = await getFindRegistries();
+    assert.deepStrictEqual(registries, [
+      {
+        id: "verified-essentials",
+        label: "Verified essentials",
+        serversUrl: "http://localhost:3000/api/v1/servers",
+      },
+      {
+        id: "official-anthropic-registry",
+        label: "Official Anthropic registry",
+        serversUrl: "https://registry.modelcontextprotocol.io/v0.1/servers",
+      },
+    ]);
   });
 
   cleanup();

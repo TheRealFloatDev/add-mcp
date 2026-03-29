@@ -17,9 +17,18 @@ import {
   buildAgentSelectionChoices,
   selectAgentsInteractive,
 } from "./agents.js";
-import { getLastSelectedAgents } from "./mcp-lock.js";
+import {
+  getFindRegistries,
+  getLastSelectedAgents,
+  getMcpLockPath,
+  saveFindRegistries,
+} from "./mcp-lock.js";
 import { parseSource, isRemoteSource } from "./source-parser.js";
-import { runFind } from "./find.js";
+import {
+  resolveOfficialRegistryServersUrl,
+  runFind,
+  type FindRegistrySearchConfig,
+} from "./find.js";
 import {
   buildServerConfig,
   installServer,
@@ -134,6 +143,64 @@ interface Options {
   yes?: boolean;
   all?: boolean;
   gitignore?: boolean;
+}
+
+const VERIFIED_ESSENTIALS_DEFAULT_SERVERS_URL =
+  process.env.ADD_MCP_VERIFIED_ESSENTIALS_REGISTRY_URL ||
+  "http://localhost:3000/api/v1/servers";
+
+function getDefaultFindRegistries(): FindRegistrySearchConfig[] {
+  return [
+    {
+      id: "verified-essentials",
+      label: "Verified essentials",
+      serversUrl: VERIFIED_ESSENTIALS_DEFAULT_SERVERS_URL,
+    },
+    {
+      id: "official-anthropic-registry",
+      label: "Official Anthropic registry",
+      serversUrl: resolveOfficialRegistryServersUrl(),
+    },
+  ];
+}
+
+async function ensureFindRegistriesConfigured(
+  yes: boolean | undefined,
+): Promise<FindRegistrySearchConfig[] | null> {
+  const configured = await getFindRegistries();
+  if (configured.length > 0) {
+    return configured;
+  }
+
+  p.log.warn("Find requires configuring one or more registries");
+  if (yes) {
+    p.log.error("Re-run without --yes to configure registries for find/search");
+    return null;
+  }
+
+  const defaults = getDefaultFindRegistries();
+  const selected = await p.multiselect({
+    message:
+      "[One time] Please select what MCP registries you would like to configure globally for search",
+    options: defaults.map((registry) => ({
+      value: registry.id,
+      label: registry.label,
+      hint: registry.serversUrl,
+    })),
+    required: true,
+  });
+  if (p.isCancel(selected)) {
+    return null;
+  }
+
+  const selectedRegistries = defaults.filter((registry) =>
+    (selected as string[]).includes(registry.id),
+  );
+  await saveFindRegistries(selectedRegistries);
+  p.log.info(
+    `Selection has been saved to ${shortenPath(getMcpLockPath())} - you can remove or update it any time.`,
+  );
+  return selectedRegistries;
 }
 
 function extractOptions(
@@ -326,8 +393,15 @@ async function runFindCommand(
     process.exit(1);
   }
 
+  const registries = await ensureFindRegistriesConfigured(options.yes);
+  if (!registries) {
+    p.cancel("Find cancelled");
+    process.exit(0);
+  }
+
   const installPlan = await runFind(query, {
     yes: options.yes,
+    registries,
   });
 
   if (!installPlan) {

@@ -6,9 +6,16 @@ const AGENTS_DIR = ".agents";
 const LOCK_FILE = ".mcp-lock.json";
 const CURRENT_VERSION = 1;
 
+export interface FindRegistryConfigEntry {
+  id: string;
+  label: string;
+  serversUrl: string;
+}
+
 export interface McpLockFile {
   version: number;
   lastSelectedAgents?: string[];
+  findRegistries?: FindRegistryConfigEntry[];
 }
 
 export function getMcpLockPath(): string {
@@ -53,6 +60,19 @@ export async function getLastSelectedAgents(): Promise<string[] | undefined> {
 export async function saveSelectedAgents(agents: string[]): Promise<void> {
   const lock = await readMcpLock();
   lock.lastSelectedAgents = agents;
+  await writeMcpLock(lock);
+}
+
+export async function getFindRegistries(): Promise<FindRegistryConfigEntry[]> {
+  const lock = await readMcpLock();
+  return lock.findRegistries ?? [];
+}
+
+export async function saveFindRegistries(
+  registries: FindRegistryConfigEntry[],
+): Promise<void> {
+  const lock = await readMcpLock();
+  lock.findRegistries = registries;
   await writeMcpLock(lock);
 }
 

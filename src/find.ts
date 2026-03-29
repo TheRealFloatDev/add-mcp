@@ -46,6 +46,7 @@ export interface RegistryServerEntry {
 
 export interface FindCommandOptions {
   yes?: boolean;
+  registries?: FindRegistrySearchConfig[];
 }
 
 export interface FindInstallPlan {
@@ -60,6 +61,17 @@ export interface PromptField {
   label: string;
   isRequired: boolean;
   placeholder: string;
+}
+
+export interface FindRegistrySearchConfig {
+  id: string;
+  label: string;
+  serversUrl: string;
+}
+
+export interface RegistrySearchResult {
+  entries: RegistryServerEntry[];
+  failedRegistries: string[];
 }
 
 export function buildPlaceholderValue(kind: "header" | "variable"): string {
@@ -175,11 +187,21 @@ interface RegistryServerListResponse {
   servers?: RegistryServerListItem[];
 }
 
-function getRegistryApiBase(): string {
-  return (
-    process.env.MCP_REGISTRY_API_URL ||
-    "https://registry.modelcontextprotocol.io"
-  );
+const OFFICIAL_REGISTRY_BASE_URL = "https://registry.modelcontextprotocol.io";
+
+function ensureNoTrailingSlash(value: string): string {
+  return value.endsWith("/") ? value.slice(0, -1) : value;
+}
+
+export function resolveOfficialRegistryServersUrl(): string {
+  const configured = process.env.MCP_REGISTRY_API_URL?.trim();
+  if (!configured) {
+    return `${OFFICIAL_REGISTRY_BASE_URL}/v0.1/servers`;
+  }
+  if (configured.includes("/servers")) {
+    return configured;
+  }
+  return `${ensureNoTrailingSlash(configured)}/v0.1/servers`;
 }
 
 interface RegistryServerListItem {
@@ -214,36 +236,87 @@ function toEntry(item: RegistryServerListItem): RegistryServerEntry | null {
   };
 }
 
-export async function searchRegistry(
-  query: string,
-): Promise<RegistryServerEntry[]> {
-  const trimmedQuery = normalize(query);
-  if (!trimmedQuery) return [];
-
+function buildRegistryRequestUrl(serversUrl: string, query: string): string {
   const params = new URLSearchParams({
-    search: trimmedQuery,
+    search: query,
     version: "latest",
     limit: "30",
   });
-  const url = `${getRegistryApiBase()}/v0.1/servers?${params.toString()}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Registry API request failed (${response.status})`);
+  const url = new URL(serversUrl);
+  for (const [key, value] of params.entries()) {
+    url.searchParams.set(key, value);
   }
-
-  const payload = (await response.json()) as RegistryServerListResponse;
-  const entries: RegistryServerEntry[] = [];
-  for (const item of payload.servers ?? []) {
-    const entry = toEntry(item);
-    if (!entry) continue;
-    entries.push(entry);
-  }
-  return entries;
+  return url.toString();
 }
 
-function toServerName(entryName: string): string {
-  const parts = entryName.split("/");
-  return parts[parts.length - 1] || entryName;
+export async function searchRegistry(
+  query: string,
+  registries: FindRegistrySearchConfig[],
+): Promise<RegistrySearchResult> {
+  const trimmedQuery = normalize(query);
+  if (!trimmedQuery) {
+    return { entries: [], failedRegistries: [] };
+  }
+
+  const deduped = new Map<string, RegistryServerEntry>();
+  const failedRegistries: string[] = [];
+
+  for (const registry of registries) {
+    try {
+      const requestUrl = buildRegistryRequestUrl(registry.serversUrl, trimmedQuery);
+      const response = await fetch(requestUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const payload = (await response.json()) as RegistryServerListResponse;
+      for (const item of payload.servers ?? []) {
+        const entry = toEntry(item);
+        if (!entry) continue;
+        const key = `${entry.name}@${entry.version}`;
+        if (!deduped.has(key)) {
+          deduped.set(key, entry);
+        }
+      }
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "unknown error";
+      failedRegistries.push(`${registry.label} (${registry.serversUrl}): ${detail}`);
+    }
+  }
+
+  if (deduped.size === 0 && failedRegistries.length > 0) {
+    throw new Error(failedRegistries.join("; "));
+  }
+
+  return {
+    entries: [...deduped.values()],
+    failedRegistries,
+  };
+}
+
+export function resolveServerName(entry: RegistryServerEntry): string {
+  const title = entry.title?.trim();
+  if (title && title.length > 0) {
+    return title.toLowerCase();
+  }
+
+  const cleaned = entry.name
+    .toLowerCase()
+    .replace(/mcp/g, "")
+    .replace(/com/g, "");
+  const tokens = cleaned
+    .split(/[^a-z0-9]+/i)
+    .filter((token) => token.length > 0);
+  if (tokens.length > 0) {
+    return tokens.join("-");
+  }
+
+  const fallback = entry.name
+    .toLowerCase()
+    .split(/[^a-z0-9]+/i)
+    .filter((token) => token.length > 0)
+    .join("-");
+  return fallback || "server";
 }
 
 function remoteToTransport(
@@ -448,7 +521,7 @@ export async function buildInstallPlanForEntry(
   if (mode === "package" && pkg) {
     return {
       target: formatPackageTarget(pkg),
-      serverName: toServerName(entry.name),
+      serverName: resolveServerName(entry),
     };
   }
 
@@ -460,7 +533,7 @@ export async function buildInstallPlanForEntry(
 
   return {
     target: resolved.url,
-    serverName: toServerName(entry.name),
+    serverName: resolveServerName(entry),
     transport: remoteToTransport(remote.type),
     headers: resolved.headers,
   };
@@ -470,14 +543,33 @@ export async function runFind(
   query: string,
   options: FindCommandOptions,
 ): Promise<FindInstallPlan | null> {
+  const registries =
+    options.registries && options.registries.length > 0
+      ? options.registries
+      : [
+          {
+            id: "official-anthropic",
+            label: "Official Anthropic registry",
+            serversUrl: resolveOfficialRegistryServersUrl(),
+          },
+        ];
   let entries: RegistryServerEntry[];
+  let failedRegistries: string[] = [];
   try {
-    entries = await searchRegistry(query);
+    const result = await searchRegistry(query, registries);
+    entries = result.entries;
+    failedRegistries = result.failedRegistries;
   } catch (error) {
     p.log.error(
-      `Failed to query MCP registry: ${error instanceof Error ? error.message : "unknown error"}`,
+      `Failed to query configured MCP registries: ${error instanceof Error ? error.message : "unknown error"}`,
     );
     return null;
+  }
+
+  if (failedRegistries.length > 0) {
+    p.log.warn(
+      `Some registries failed and were skipped: ${failedRegistries.join("; ")}`,
+    );
   }
 
   if (entries.length === 0) {

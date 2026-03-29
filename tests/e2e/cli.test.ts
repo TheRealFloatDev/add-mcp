@@ -1,7 +1,14 @@
 #!/usr/bin/env tsx
 
 import assert from "node:assert";
-import { mkdtempSync, rmSync, readFileSync, existsSync } from "node:fs";
+import {
+  mkdtempSync,
+  rmSync,
+  readFileSync,
+  existsSync,
+  mkdirSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -60,6 +67,34 @@ function runCli(args: string[], cwd: string, homeDir: string) {
   });
 }
 
+function seedFindRegistries(homeDir: string) {
+  const lockPath = join(homeDir, ".agents", ".mcp-lock.json");
+  mkdirSync(dirname(lockPath), { recursive: true });
+  writeFileSync(
+    lockPath,
+    JSON.stringify(
+      {
+        version: 1,
+        findRegistries: [
+          {
+            id: "verified-essentials",
+            label: "Verified essentials",
+            serversUrl: "http://localhost:3000/api/v1/servers",
+          },
+          {
+            id: "official-anthropic-registry",
+            label: "Official Anthropic registry",
+            serversUrl: "https://registry.modelcontextprotocol.io/v0.1/servers",
+          },
+        ],
+      },
+      null,
+      2,
+    ),
+    "utf-8",
+  );
+}
+
 test("E2E CLI: --gitignore adds local config path", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();
@@ -109,9 +144,22 @@ test("E2E CLI: --gitignore with --global warns and does not write project .gitig
   assert.strictEqual(existsSync(join(homeDir, ".cursor", "mcp.json")), true);
 });
 
+test("E2E CLI: find -y without registry config asks to configure registries", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(["find", "postman", "-a", "cursor", "-y"], projectDir, homeDir);
+  assert.strictEqual(result.status, 0, "CLI should exit gracefully");
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /Find requires configuring one or more registries/);
+  assert.match(output, /Re-run without --yes to configure registries for find\/search/);
+});
+
 test("E2E CLI: find -y picks best match and installs remote with placeholders", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();
+  seedFindRegistries(homeDir);
 
   const result = runCli(
     ["find", "postman", "-a", "cursor", "-y"],
@@ -134,7 +182,9 @@ test("E2E CLI: find -y picks best match and installs remote with placeholders", 
       { url?: string; headers?: Record<string, string> }
     >;
   };
-  const postmanConfig = savedConfig.mcpServers?.["postman-mcp-server"];
+  const postmanConfig = Object.values(savedConfig.mcpServers ?? {}).find(
+    (server) => server.url === "https://mcp.postman.com/mcp",
+  );
   assert.ok(postmanConfig);
   assert.strictEqual(postmanConfig?.url, "https://mcp.postman.com/mcp");
   assert.deepStrictEqual(postmanConfig?.headers, {

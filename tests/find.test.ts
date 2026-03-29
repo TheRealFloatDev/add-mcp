@@ -8,6 +8,7 @@ import {
   filterSmitheryWhenAlternativesExist,
   formatFindResultRow,
   rankRegistryEntries,
+  resolveServerName,
   resolveTemplateUrl,
   searchRegistry,
 } from "../src/find.js";
@@ -193,7 +194,15 @@ test("searchRegistry maps API response entries", async () => {
     }) as Response) as typeof fetch;
 
   try {
-    const results = await searchRegistry("supabase");
+    const result = await searchRegistry("supabase", [
+      {
+        id: "official",
+        label: "Official Anthropic registry",
+        serversUrl: "https://registry.modelcontextprotocol.io/v0.1/servers",
+      },
+    ]);
+    const results = result.entries;
+    assert.strictEqual(result.failedRegistries.length, 0);
     assert.strictEqual(results.length, officialServersFixture.length);
     assert.strictEqual(
       results.some((entry) => entry.name === "com.supabase/mcp"),
@@ -227,8 +236,82 @@ test("searchRegistry throws on non-ok response", async () => {
 
   try {
     await assert.rejects(async () => {
-      await searchRegistry("supabase");
+      await searchRegistry("supabase", [
+        {
+          id: "official",
+          label: "Official Anthropic registry",
+          serversUrl: "https://registry.modelcontextprotocol.io/v0.1/servers",
+        },
+      ]);
     });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("searchRegistry merges registries and skips failed sources", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.startsWith("https://verified.local/api/v1/servers")) {
+      return {
+        ok: false,
+        status: 503,
+        json: async () => ({}),
+      } as Response;
+    }
+    return {
+      ok: true,
+      json: async () => ({
+        servers: [
+          {
+            server: {
+              name: "com.supabase/mcp",
+              description: "Supabase MCP",
+              version: "0.6.3",
+              remotes: [
+                {
+                  type: "streamable-http",
+                  url: "https://mcp.supabase.com/mcp",
+                },
+              ],
+            },
+          },
+          {
+            server: {
+              name: "com.postman/postman-mcp-server",
+              description: "Postman MCP",
+              version: "2.7.0",
+              remotes: [
+                { type: "streamable-http", url: "https://mcp.postman.com/mcp" },
+              ],
+            },
+          },
+        ],
+      }),
+    } as Response;
+  }) as typeof fetch;
+
+  try {
+    const result = await searchRegistry("mcp", [
+      {
+        id: "verified",
+        label: "Verified essentials",
+        serversUrl: "https://verified.local/api/v1/servers",
+      },
+      {
+        id: "official",
+        label: "Official Anthropic registry",
+        serversUrl: "https://registry.modelcontextprotocol.io/v0.1/servers",
+      },
+    ]);
+
+    assert.strictEqual(result.entries.length, 2);
+    assert.strictEqual(result.failedRegistries.length, 1);
+    assert.strictEqual(
+      result.failedRegistries[0]?.includes("Verified essentials"),
+      true,
+    );
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -353,6 +436,26 @@ test("buildInstallPlanForEntry defaults to remote in -y for hybrid entries", asy
   assert.ok(plan);
   assert.strictEqual(plan?.target, "https://mcp.supabase.com/mcp");
   assert.strictEqual(plan?.transport, "http");
+  assert.strictEqual(plan?.serverName, "supabase");
+});
+
+test("resolveServerName uses lowercased title when present", () => {
+  const name = resolveServerName({
+    name: "com.postman/postman-mcp-server",
+    title: "Postman",
+    description: "Postman MCP server for Postman API workflows",
+    version: "2.7.0",
+  });
+  assert.strictEqual(name, "postman");
+});
+
+test("resolveServerName removes com and mcp from fallback name", () => {
+  const name = resolveServerName({
+    name: "com.neon.mcp",
+    description: "Neon MCP server",
+    version: "1.0.0",
+  });
+  assert.strictEqual(name, "neon");
 });
 
 test("resolveTemplateUrl replaces provided variables only", () => {
