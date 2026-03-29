@@ -126,6 +126,7 @@ interface Options {
   transport?: string;
   type?: string;
   header?: string[];
+  env?: string[];
   yes?: boolean;
   all?: boolean;
   gitignore?: boolean;
@@ -168,6 +169,36 @@ function parseHeaders(values: string[]): ParsedHeadersResult {
   return { headers, invalid };
 }
 
+interface ParsedEnvResult {
+  env: Record<string, string>;
+  invalid: string[];
+}
+
+function parseEnv(values: string[]): ParsedEnvResult {
+  const env: Record<string, string> = {};
+  const invalid: string[] = [];
+
+  for (const entry of values) {
+    const separatorIndex = entry.indexOf("=");
+    if (separatorIndex <= 0) {
+      invalid.push(entry);
+      continue;
+    }
+
+    const key = entry.slice(0, separatorIndex).trim();
+    const value = entry.slice(separatorIndex + 1);
+
+    if (!key) {
+      invalid.push(entry);
+      continue;
+    }
+
+    env[key] = value;
+  }
+
+  return { env, invalid };
+}
+
 program
   .name("add-mcp")
   .description(
@@ -192,6 +223,12 @@ program
   .option(
     "--header <header>",
     "HTTP header for remote servers (repeatable, 'Key: Value')",
+    collect,
+    [],
+  )
+  .option(
+    "--env <env>",
+    "Environment variable for local stdio servers (repeatable, 'KEY=VALUE')",
     collect,
     [],
   )
@@ -333,6 +370,23 @@ async function main(target: string | undefined, options: Options) {
     p.log.warn("--header is only used for remote URLs, ignoring");
   }
 
+  const envValues = options.env ?? [];
+  const envResult = parseEnv(envValues);
+  if (envResult.invalid.length > 0) {
+    p.log.error(
+      `Invalid --env value(s): ${envResult.invalid.join(", ")}. Use "KEY=VALUE" format.`,
+    );
+    process.exit(1);
+  }
+
+  const envKeys = Object.keys(envResult.env);
+  const hasEnvValues = envKeys.length > 0;
+  if (hasEnvValues && isRemote) {
+    p.log.warn(
+      "--env is only used for local/package/command installs, ignoring",
+    );
+  }
+
   // Determine server name
   const serverName = options.name || parsed.inferredName;
   p.log.info(`Server name: ${chalk.cyan(serverName)}`);
@@ -359,6 +413,7 @@ async function main(target: string | undefined, options: Options) {
   const serverConfig = buildServerConfig(parsed, {
     transport: resolvedTransport,
     headers: isRemote && hasHeaderValues ? headerResult.headers : undefined,
+    env: !isRemote && hasEnvValues ? envResult.env : undefined,
   });
 
   // Determine target agents
