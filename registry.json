@@ -24,6 +24,45 @@
   },
   {
     "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.apify/mcp",
+      "title": "Apify",
+      "description": "Extract data from social media, search engines, maps, e-commerce sites, and any website using thousands of ready-made tools from Apify Store.",
+      "repository": {
+        "url": "https://github.com/apify/apify-mcp-server",
+        "source": "github"
+      },
+      "version": "0.9.16",
+      "websiteUrl": "https://mcp.apify.com",
+      "packages": [
+        {
+          "registryType": "npm",
+          "registryBaseUrl": "https://registry.npmjs.org",
+          "identifier": "@apify/actors-mcp-server",
+          "version": "0.9.16",
+          "transport": {
+            "type": "stdio"
+          },
+          "environmentVariables": [
+            {
+              "name": "APIFY_TOKEN",
+              "description": "Your Apify API token",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.apify.com"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
       "name": "io.github.browserbase/mcp-server-browserbase",
       "title": "Browserbase",
@@ -154,6 +193,61 @@
               "isSecret": true
             }
           ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "ai.exa/mcp",
+      "title": "Exa",
+      "description": "Web search and code search MCP server powered by Exa",
+      "repository": {
+        "url": "https://github.com/exa-labs/exa-mcp-server",
+        "source": "github"
+      },
+      "version": "1.0.0",
+      "websiteUrl": "https://exa.ai",
+      "packages": [
+        {
+          "registryType": "npm",
+          "registryBaseUrl": "https://registry.npmjs.org",
+          "identifier": "exa-mcp-server",
+          "version": "1.0.0",
+          "transport": {
+            "type": "stdio"
+          },
+          "environmentVariables": [
+            {
+              "name": "EXA_API_KEY",
+              "description": "Your Exa API key",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.exa.ai/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.figma/mcp",
+      "title": "Figma",
+      "description": "Official Figma MCP server for accessing design files, components, and design context",
+      "version": "1.0.0",
+      "websiteUrl": "https://help.figma.com/hc/en-us/articles/35281350665623-Figma-MCP-collection-How-to-set-up-the-Figma-remote-MCP-server-preferred",
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.figma.com/mcp"
         }
       ]
     }
