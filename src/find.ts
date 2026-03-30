@@ -249,6 +249,11 @@ function toEntry(item: RegistryServerListItem): RegistryServerEntry | null {
     (pkg) => pkg.registryType === "npm",
   );
 
+  const hasRemotes = Array.isArray(server.remotes) && server.remotes.length > 0;
+  if (!npmPackage && !hasRemotes) {
+    return null;
+  }
+
   return {
     name: server.name,
     title: server.title,

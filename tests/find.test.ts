@@ -822,7 +822,7 @@ test("buildInstallPlanForEntry falls back to available remote when preferred tra
   assert.strictEqual(plan?.transport, "http");
 });
 
-test("searchRegistry filters to npm packages only via toEntry", async () => {
+test("searchRegistry filters out entries with no npm package and no remotes", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = (async () =>
     ({
@@ -832,7 +832,7 @@ test("searchRegistry filters to npm packages only via toEntry", async () => {
           {
             server: {
               name: "com.example/oci-only",
-              description: "OCI-only server",
+              description: "OCI-only server with no remotes",
               version: "1.0.0",
               packages: [
                 {
@@ -842,6 +842,13 @@ test("searchRegistry filters to npm packages only via toEntry", async () => {
                   transport: { type: "stdio" },
                 },
               ],
+            },
+          },
+          {
+            server: {
+              name: "com.example/metadata-only",
+              description: "Just metadata, no transports",
+              version: "0.1.0",
             },
           },
           {
@@ -859,6 +866,19 @@ test("searchRegistry filters to npm packages only via toEntry", async () => {
               ],
             },
           },
+          {
+            server: {
+              name: "com.example/remote-only",
+              description: "Remote-only server",
+              version: "1.0.0",
+              remotes: [
+                {
+                  type: "streamable-http",
+                  url: "https://example.com/mcp",
+                },
+              ],
+            },
+          },
         ],
       }),
     }) as Response) as typeof fetch;
@@ -870,15 +890,60 @@ test("searchRegistry filters to npm packages only via toEntry", async () => {
         label: "Test",
       },
     ]);
+    const names = result.entries.map((e) => e.name);
     assert.strictEqual(result.entries.length, 2);
-    const ociEntry = result.entries.find(
-      (e) => e.name === "com.example/oci-only",
-    );
-    const npmEntry = result.entries.find(
-      (e) => e.name === "com.example/npm-server",
-    );
-    assert.strictEqual(ociEntry?.package, undefined);
-    assert.strictEqual(npmEntry?.package?.identifier, "@example/mcp-server");
+    assert.strictEqual(names.includes("com.example/npm-server"), true);
+    assert.strictEqual(names.includes("com.example/remote-only"), true);
+    assert.strictEqual(names.includes("com.example/oci-only"), false);
+    assert.strictEqual(names.includes("com.example/metadata-only"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("searchRegistry keeps entries with both npm package and remotes", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () =>
+    ({
+      ok: true,
+      json: async () => ({
+        servers: [
+          {
+            server: {
+              name: "com.example/hybrid",
+              description: "Has both npm and remote",
+              version: "1.0.0",
+              packages: [
+                {
+                  registryType: "npm",
+                  identifier: "@example/hybrid",
+                  version: "1.0.0",
+                  transport: { type: "stdio" },
+                },
+              ],
+              remotes: [
+                {
+                  type: "streamable-http",
+                  url: "https://example.com/mcp",
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    }) as Response) as typeof fetch;
+
+  try {
+    const result = await searchRegistry("example", [
+      {
+        url: "https://test.example.com/api/v1/servers",
+        label: "Test",
+      },
+    ]);
+    assert.strictEqual(result.entries.length, 1);
+    const entry = result.entries[0]!;
+    assert.strictEqual(entry.package?.identifier, "@example/hybrid");
+    assert.strictEqual(entry.remotes?.[0]?.url, "https://example.com/mcp");
   } finally {
     globalThis.fetch = originalFetch;
   }
