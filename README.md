@@ -209,8 +209,6 @@ If you run with `-y` before this one-time registry setup is completed, the CLI e
 | **Verified essentials**         | `https://mcp-registry.agent-tooling.dev/api/v1/servers` | A curated list of first-party, verified MCP servers from popular developer tools and SaaS services. Designed to surface high-quality, officially maintained servers instead of a long tail of unmaintained or third-party entries. |
 | **Official Anthropic registry** | `https://registry.modelcontextprotocol.io/v0.1/servers` | The community-driven MCP server registry maintained by Anthropic. Contains the broadest catalog of MCP servers.                                                                                                                    |
 
-`MCP_REGISTRY_API_URL` can override the official registry base URL.
-
 ### Editing or Removing Registries
 
 Registry selections are stored in `~/.config/add-mcp/config.json` under the `findRegistries` key. You can edit this file directly to add, remove, or reorder registries:

@@ -681,48 +681,12 @@ test("searchRegistry fetches entries for empty string query (browse mode)", asyn
   }
 });
 
-test("resolveOfficialRegistryServersUrl returns default when no env", () => {
-  const original = process.env.MCP_REGISTRY_API_URL;
-  delete process.env.MCP_REGISTRY_API_URL;
-  try {
-    const url = resolveOfficialRegistryServersUrl();
-    assert.strictEqual(
-      url,
-      "https://registry.modelcontextprotocol.io/v0.1/servers",
-    );
-  } finally {
-    if (original !== undefined) process.env.MCP_REGISTRY_API_URL = original;
-  }
-});
-
-test("resolveOfficialRegistryServersUrl uses env as-is when it contains /servers", () => {
-  const original = process.env.MCP_REGISTRY_API_URL;
-  process.env.MCP_REGISTRY_API_URL = "https://custom.registry.io/v2/servers";
-  try {
-    const url = resolveOfficialRegistryServersUrl();
-    assert.strictEqual(url, "https://custom.registry.io/v2/servers");
-  } finally {
-    if (original !== undefined) {
-      process.env.MCP_REGISTRY_API_URL = original;
-    } else {
-      delete process.env.MCP_REGISTRY_API_URL;
-    }
-  }
-});
-
-test("resolveOfficialRegistryServersUrl appends /v0.1/servers to base URL", () => {
-  const original = process.env.MCP_REGISTRY_API_URL;
-  process.env.MCP_REGISTRY_API_URL = "https://custom.registry.io/";
-  try {
-    const url = resolveOfficialRegistryServersUrl();
-    assert.strictEqual(url, "https://custom.registry.io/v0.1/servers");
-  } finally {
-    if (original !== undefined) {
-      process.env.MCP_REGISTRY_API_URL = original;
-    } else {
-      delete process.env.MCP_REGISTRY_API_URL;
-    }
-  }
+test("resolveOfficialRegistryServersUrl returns the default registry URL", () => {
+  const url = resolveOfficialRegistryServersUrl();
+  assert.strictEqual(
+    url,
+    "https://registry.modelcontextprotocol.io/v0.1/servers",
+  );
 });
 
 test("buildInstallPlanForEntry returns package target for package-only entry", async () => {

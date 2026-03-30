@@ -195,19 +195,8 @@ interface RegistryServerListResponse {
 
 const OFFICIAL_REGISTRY_BASE_URL = "https://registry.modelcontextprotocol.io";
 
-function ensureNoTrailingSlash(value: string): string {
-  return value.endsWith("/") ? value.slice(0, -1) : value;
-}
-
 export function resolveOfficialRegistryServersUrl(): string {
-  const configured = process.env.MCP_REGISTRY_API_URL?.trim();
-  if (!configured) {
-    return `${OFFICIAL_REGISTRY_BASE_URL}/v0.1/servers`;
-  }
-  if (configured.includes("/servers")) {
-    return configured;
-  }
-  return `${ensureNoTrailingSlash(configured)}/v0.1/servers`;
+  return `${OFFICIAL_REGISTRY_BASE_URL}/v0.1/servers`;
 }
 
 const VERIFIED_ESSENTIALS_DEFAULT_SERVERS_URL =
