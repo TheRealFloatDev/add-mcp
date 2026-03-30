@@ -94,7 +94,10 @@ function hasAnyInstallTarget(entry: RegistryServerEntry): boolean {
   return (entry.remotes?.length ?? 0) > 0 || (entry.packages?.length ?? 0) > 0;
 }
 
-function compareEntries(a: RegistryServerEntry, b: RegistryServerEntry): number {
+function compareEntries(
+  a: RegistryServerEntry,
+  b: RegistryServerEntry,
+): number {
   const titleDiff = a.title.localeCompare(b.title, undefined, {
     sensitivity: "base",
   });
@@ -102,7 +105,10 @@ function compareEntries(a: RegistryServerEntry, b: RegistryServerEntry): number 
   return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
 }
 
-function sameOrder(a: RegistryServerEntry[], b: RegistryServerEntry[]): boolean {
+function sameOrder(
+  a: RegistryServerEntry[],
+  b: RegistryServerEntry[],
+): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i += 1) {
     const left = a[i];
@@ -136,7 +142,9 @@ async function main(): Promise<void> {
   const parsedEntries: RegistryServerEntry[] = [];
 
   rawEntries.forEach((rawEntry, index) => {
-    const parsed = registryServerSchema.safeParse(extractServerCandidate(rawEntry));
+    const parsed = registryServerSchema.safeParse(
+      extractServerCandidate(rawEntry),
+    );
     if (!parsed.success) {
       const details = parsed.error.issues
         .map((issue) => {
@@ -160,7 +168,9 @@ async function main(): Promise<void> {
   if (!sameOrder(parsedEntries, sortedEntries)) {
     const firstMismatch = parsedEntries.findIndex((entry, index) => {
       const sorted = sortedEntries[index];
-      return !sorted || entry.title !== sorted.title || entry.name !== sorted.name;
+      return (
+        !sorted || entry.title !== sorted.title || entry.name !== sorted.name
+      );
     });
     const current = parsedEntries[firstMismatch];
     const expected = sortedEntries[firstMismatch];

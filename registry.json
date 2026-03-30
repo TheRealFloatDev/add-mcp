@@ -54,17 +54,13 @@
         {
           "src": "https://clerk.com/v2/downloads/symbol-dark.svg",
           "mimeType": "image/svg+xml",
-          "sizes": [
-            "any"
-          ],
+          "sizes": ["any"],
           "theme": "light"
         },
         {
           "src": "https://clerk.com/v2/downloads/symbol-light.svg",
           "mimeType": "image/svg+xml",
-          "sizes": [
-            "any"
-          ],
+          "sizes": ["any"],
           "theme": "dark"
         }
       ],
@@ -110,17 +106,13 @@
         {
           "src": "https://upstash.com/logo/upstash-icon-white-bg.svg",
           "mimeType": "image/svg+xml",
-          "sizes": [
-            "any"
-          ],
+          "sizes": ["any"],
           "theme": "light"
         },
         {
           "src": "https://upstash.com/logo/upstash-icon-dark-bg.svg",
           "mimeType": "image/svg+xml",
-          "sizes": [
-            "any"
-          ],
+          "sizes": ["any"],
           "theme": "dark"
         }
       ],
@@ -259,17 +251,13 @@
         {
           "src": "https://neon.com/brand/neon-logomark-light-color.svg",
           "mimeType": "image/svg+xml",
-          "sizes": [
-            "any"
-          ],
+          "sizes": ["any"],
           "theme": "light"
         },
         {
           "src": "https://neon.com/brand/neon-logomark-dark-color.svg",
           "mimeType": "image/svg+xml",
-          "sizes": [
-            "any"
-          ],
+          "sizes": ["any"],
           "theme": "dark"
         }
       ],
@@ -383,17 +371,13 @@
         {
           "src": "https://railway.com/brand/logo-dark.svg",
           "mimeType": "image/svg+xml",
-          "sizes": [
-            "any"
-          ],
+          "sizes": ["any"],
           "theme": "light"
         },
         {
           "src": "https://railway.com/brand/logo-light.svg",
           "mimeType": "image/svg+xml",
-          "sizes": [
-            "any"
-          ],
+          "sizes": ["any"],
           "theme": "dark"
         }
       ],
@@ -455,17 +439,13 @@
         {
           "src": "https://cdn.resend.com/brand/resend-icon-black.svg",
           "mimeType": "image/svg+xml",
-          "sizes": [
-            "any"
-          ],
+          "sizes": ["any"],
           "theme": "light"
         },
         {
           "src": "https://cdn.resend.com/brand/resend-icon-white.svg",
           "mimeType": "image/svg+xml",
-          "sizes": [
-            "any"
-          ],
+          "sizes": ["any"],
           "theme": "dark"
         }
       ],

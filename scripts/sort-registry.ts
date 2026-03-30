@@ -61,7 +61,11 @@ async function main(): Promise<void> {
 
   if (Array.isArray(parsed)) {
     const sorted = sortedCopy(parsed);
-    await writeFile(REGISTRY_PATH, `${JSON.stringify(sorted, null, 2)}\n`, "utf8");
+    await writeFile(
+      REGISTRY_PATH,
+      `${JSON.stringify(sorted, null, 2)}\n`,
+      "utf8",
+    );
     console.log(`Sorted ${sorted.length} registry entries by title`);
     return;
   }
@@ -77,7 +81,11 @@ async function main(): Promise<void> {
     ...parsed,
     servers: sortedServers,
   };
-  await writeFile(REGISTRY_PATH, `${JSON.stringify(output, null, 2)}\n`, "utf8");
+  await writeFile(
+    REGISTRY_PATH,
+    `${JSON.stringify(output, null, 2)}\n`,
+    "utf8",
+  );
   console.log(`Sorted ${sortedServers.length} registry entries by title`);
 }
 

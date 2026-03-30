@@ -286,10 +286,7 @@ export async function searchRegistry(
 
   for (const registry of registries) {
     try {
-      const requestUrl = buildRegistryRequestUrl(
-        registry.url,
-        trimmedQuery,
-      );
+      const requestUrl = buildRegistryRequestUrl(registry.url, trimmedQuery);
       const response = await fetch(requestUrl);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -398,8 +395,7 @@ export async function collectPromptValues(
       return { values, cancelled: true };
     }
 
-    const value =
-      raw != null && typeof raw === "string" ? raw.trim() : "";
+    const value = raw != null && typeof raw === "string" ? raw.trim() : "";
 
     if (value.length > 0) {
       values[field.key] = value;

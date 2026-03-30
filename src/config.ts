@@ -108,20 +108,24 @@ export async function getFindRegistries(): Promise<FindRegistryConfigEntry[]> {
   return config.findRegistries.map(normalizeFindRegistryEntry);
 }
 
+interface LegacyFindRegistryEntry {
+  url?: string;
+  serversUrl?: string;
+  id?: string;
+  label?: string;
+}
+
 function normalizeFindRegistryEntry(
-  raw: Record<string, unknown>,
+  raw: FindRegistryConfigEntry,
 ): FindRegistryConfigEntry {
-  const entry = raw as FindRegistryConfigEntry & {
-    serversUrl?: string;
-    id?: string;
-  };
-  const url = entry.url ?? entry.serversUrl;
+  const legacy = raw as unknown as LegacyFindRegistryEntry;
+  const url = legacy.url ?? legacy.serversUrl;
   if (!url || typeof url !== "string") {
     throw new Error("Registry entry missing url");
   }
   return {
     url,
-    ...(entry.label ? { label: entry.label } : {}),
+    ...(legacy.label ? { label: legacy.label } : {}),
   };
 }
 
