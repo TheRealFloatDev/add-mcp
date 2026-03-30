@@ -195,6 +195,83 @@ MCP servers can be installed to any of these agents:
 
 The CLI uses smart detection to find agents in your project directory and globally installed agents. See [Smart Detection](#smart-detection) for details.
 
+## Configuring Registries for Find / Search
+
+The first time you run `find` or `search`, the CLI prompts you to choose which registries to enable. Your selection is saved to `~/.agents/.mcp-lock.json` and reused on every subsequent search.
+
+### Built-in Registries
+
+| Registry | Base URL | Description |
+| -------- | -------- | ----------- |
+| **Verified essentials** | `https://mcp-registry.agent-tooling.dev/api/v1/servers` | A curated list of first-party, verified MCP servers from popular developer tools and SaaS services. Designed to surface high-quality, officially maintained servers instead of a long tail of unmaintained or third-party entries. |
+| **Official Anthropic registry** | `https://registry.modelcontextprotocol.io/v0.1/servers` | The community-driven MCP server registry maintained by Anthropic. Contains the broadest catalog of MCP servers. |
+
+### Editing or Removing Registries
+
+Registry selections are stored in `~/.agents/.mcp-lock.json` under the `findRegistries` key. You can edit this file directly to add, remove, or reorder registries:
+
+```json
+{
+  "version": 1,
+  "findRegistries": [
+    {
+      "id": "verified-essentials",
+      "label": "Verified essentials",
+      "serversUrl": "https://mcp-registry.agent-tooling.dev/api/v1/servers"
+    },
+    {
+      "id": "official-anthropic-registry",
+      "label": "Official Anthropic registry",
+      "serversUrl": "https://registry.modelcontextprotocol.io/v0.1/servers"
+    }
+  ]
+}
+```
+
+To reset and re-trigger the interactive selection prompt, remove the `findRegistries` key (or delete the file entirely).
+
+### Adding a Custom Registry
+
+Any server that implements the registry API can be added as a custom entry. The CLI sends a `GET` request to the configured `serversUrl` with the following query parameters:
+
+| Parameter | Value |
+| --------- | ----- |
+| `search` | The user's search keyword (lowercased) |
+| `version` | `latest` |
+| `limit` | `30` |
+
+The endpoint must return JSON in this shape:
+
+```json
+{
+  "servers": [
+    {
+      "server": {
+        "name": "example-server",
+        "description": "An example MCP server",
+        "version": "1.0.0",
+        "remotes": [
+          {
+            "type": "streamable-http",
+            "url": "https://mcp.example.com/mcp"
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+To add your own registry, append an entry to `findRegistries` in `~/.agents/.mcp-lock.json`:
+
+```json
+{
+  "id": "my-registry",
+  "label": "My custom registry",
+  "serversUrl": "https://my-registry.example.com/api/v1/servers"
+}
+```
+
 ## What are MCP Servers?
 
 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) servers extend your coding agent's capabilities by providing tools, resources, and context. MCP servers can:

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.7.0] - 2026-03-29
+
+- add `find` / `search` command to search MCP registries and install servers interactively
+- first-run prompt to select which registries to enable (Verified essentials and Official Anthropic registry)
+- registry config stored in `~/.agents/.mcp-lock.json` and editable to add custom registries
+
 ## [1.6.0] - 2026-03-29
 
 - add repeatable `--env KEY=VALUE` support for local stdio installs (package and command sources)

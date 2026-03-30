@@ -146,8 +146,7 @@ interface Options {
 }
 
 const VERIFIED_ESSENTIALS_DEFAULT_SERVERS_URL =
-  process.env.ADD_MCP_VERIFIED_ESSENTIALS_REGISTRY_URL ||
-  "http://localhost:3000/api/v1/servers";
+  "https://mcp-registry.agent-tooling.dev/api/v1/servers";
 
 function getDefaultFindRegistries(): FindRegistrySearchConfig[] {
   return [
