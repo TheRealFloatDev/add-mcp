@@ -164,9 +164,8 @@ async function ensureFindRegistriesConfigured(
     message:
       "[One time] Please select what MCP registries you would like to configure globally for search",
     options: defaults.map((registry) => ({
-      value: registry.id,
-      label: registry.label,
-      hint: registry.serversUrl,
+      value: registry.url,
+      label: registry.label ?? registry.url,
     })),
     required: true,
   });
@@ -175,7 +174,7 @@ async function ensureFindRegistriesConfigured(
   }
 
   const selectedRegistries = defaults.filter((registry) =>
-    (selected as string[]).includes(registry.id),
+    (selected as string[]).includes(registry.url),
   );
   await saveFindRegistries(selectedRegistries);
   p.log.info(

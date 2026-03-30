@@ -65,9 +65,8 @@ export interface PromptField {
 }
 
 export interface FindRegistrySearchConfig {
-  id: string;
-  label: string;
-  serversUrl: string;
+  url: string;
+  label?: string;
 }
 
 export interface FailedRegistryInfo {
@@ -205,14 +204,12 @@ const VERIFIED_ESSENTIALS_DEFAULT_SERVERS_URL =
 export function getDefaultFindRegistries(): FindRegistrySearchConfig[] {
   return [
     {
-      id: "verified-essentials",
+      url: VERIFIED_ESSENTIALS_DEFAULT_SERVERS_URL,
       label: "Verified essentials",
-      serversUrl: VERIFIED_ESSENTIALS_DEFAULT_SERVERS_URL,
     },
     {
-      id: "official-anthropic-registry",
+      url: resolveOfficialRegistryServersUrl(),
       label: "Official Anthropic registry",
-      serversUrl: resolveOfficialRegistryServersUrl(),
     },
   ];
 }
@@ -220,13 +217,11 @@ export function getDefaultFindRegistries(): FindRegistrySearchConfig[] {
 export function formatRegistryFailure(failure: FailedRegistryInfo): string {
   const { registry, detail } = failure;
   const defaults = getDefaultFindRegistries();
-  const isKnown = defaults.some(
-    (d) => d.id === registry.id || d.serversUrl === registry.serversUrl,
-  );
-  if (isKnown) {
-    return `"${registry.label}" (${registry.serversUrl}) is unavailable — ${detail}`;
+  const isKnown = defaults.some((d) => d.url === registry.url);
+  if (isKnown && registry.label) {
+    return `"${registry.label}" (${registry.url}) is unavailable — ${detail}`;
   }
-  return `Registry ${registry.serversUrl} is unavailable — ${detail}`;
+  return `Registry ${registry.url} is unavailable — ${detail}`;
 }
 
 interface RegistryServerListItem {
@@ -265,7 +260,7 @@ function toEntry(item: RegistryServerListItem): RegistryServerEntry | null {
   };
 }
 
-function buildRegistryRequestUrl(serversUrl: string, query: string): string {
+function buildRegistryRequestUrl(registryUrl: string, query: string): string {
   const params = new URLSearchParams({
     version: "latest",
     limit: "100",
@@ -273,7 +268,7 @@ function buildRegistryRequestUrl(serversUrl: string, query: string): string {
   if (query.length > 0) {
     params.set("search", query);
   }
-  const url = new URL(serversUrl);
+  const url = new URL(registryUrl);
   for (const [key, value] of params.entries()) {
     url.searchParams.set(key, value);
   }
@@ -292,7 +287,7 @@ export async function searchRegistry(
   for (const registry of registries) {
     try {
       const requestUrl = buildRegistryRequestUrl(
-        registry.serversUrl,
+        registry.url,
         trimmedQuery,
       );
       const response = await fetch(requestUrl);
@@ -563,8 +558,8 @@ async function offerFallbackSearch(
   alreadyQueried: FindRegistrySearchConfig[],
 ): Promise<RegistryServerEntry[] | null> {
   const defaults = getDefaultFindRegistries();
-  const queriedUrls = new Set(alreadyQueried.map((r) => r.serversUrl));
-  const candidates = defaults.filter((r) => !queriedUrls.has(r.serversUrl));
+  const queriedUrls = new Set(alreadyQueried.map((r) => r.url));
+  const candidates = defaults.filter((r) => !queriedUrls.has(r.url));
 
   if (candidates.length === 0) {
     return null;
@@ -575,7 +570,7 @@ async function offerFallbackSearch(
   if (candidates.length === 1) {
     const candidate = candidates[0]!;
     const confirmed = await p.confirm({
-      message: `Search "${candidate.label}" (${candidate.serversUrl}) instead?`,
+      message: `Search "${candidate.label ?? candidate.url}" (${candidate.url}) instead?`,
     });
     if (p.isCancel(confirmed) || !confirmed) {
       return null;
@@ -585,9 +580,8 @@ async function offerFallbackSearch(
     const selected = await p.multiselect({
       message: "Search other registries instead?",
       options: candidates.map((r) => ({
-        value: r.id,
-        label: r.label,
-        hint: r.serversUrl,
+        value: r.url,
+        label: r.label ?? r.url,
       })),
       required: true,
     });
@@ -595,7 +589,7 @@ async function offerFallbackSearch(
       return null;
     }
     selectedRegistries = candidates.filter((r) =>
-      (selected as string[]).includes(r.id),
+      (selected as string[]).includes(r.url),
     );
   }
 
@@ -665,9 +659,8 @@ export async function runFind(
       ? options.registries
       : [
           {
-            id: "official-anthropic",
+            url: resolveOfficialRegistryServersUrl(),
             label: "Official Anthropic registry",
-            serversUrl: resolveOfficialRegistryServersUrl(),
           },
         ];
 

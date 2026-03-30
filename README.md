@@ -218,14 +218,12 @@ Registry selections are stored in `~/.config/add-mcp/config.json` under the `fin
   "version": 1,
   "findRegistries": [
     {
-      "id": "verified-essentials",
-      "label": "Verified essentials",
-      "serversUrl": "https://mcp-registry.agent-tooling.dev/api/v1/servers"
+      "url": "https://mcp-registry.agent-tooling.dev/api/v1/servers",
+      "label": "Verified essentials"
     },
     {
-      "id": "official-anthropic-registry",
-      "label": "Official Anthropic registry",
-      "serversUrl": "https://registry.modelcontextprotocol.io/v0.1/servers"
+      "url": "https://registry.modelcontextprotocol.io/v0.1/servers",
+      "label": "Official Anthropic registry"
     }
   ]
 }
@@ -235,7 +233,7 @@ To reset and re-trigger the interactive selection prompt, remove the `findRegist
 
 ### Adding a Custom Registry
 
-Any server that implements the registry API can be added as a custom entry. The CLI sends a `GET` request to the configured `serversUrl` with the following query parameters:
+Any server that implements the registry API can be added as a custom entry. The CLI sends a `GET` request to the configured `url` with the following query parameters:
 
 | Parameter | Value                                  |
 | --------- | -------------------------------------- |
@@ -269,9 +267,8 @@ To add your own registry, append an entry to `findRegistries` in `~/.config/add-
 
 ```json
 {
-  "id": "my-registry",
-  "label": "My custom registry",
-  "serversUrl": "https://my-registry.example.com/api/v1/servers"
+  "url": "https://my-registry.example.com/api/v1/servers",
+  "label": "My custom registry"
 }
 ```
 

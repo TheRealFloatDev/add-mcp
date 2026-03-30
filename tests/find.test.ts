@@ -190,9 +190,8 @@ test("searchRegistry maps API response entries", async () => {
   try {
     const result = await searchRegistry("supabase", [
       {
-        id: "official",
+        url: "https://registry.modelcontextprotocol.io/v0.1/servers",
         label: "Official Anthropic registry",
-        serversUrl: "https://registry.modelcontextprotocol.io/v0.1/servers",
       },
     ]);
     const results = result.entries;
@@ -231,9 +230,8 @@ test("searchRegistry returns failure info on non-ok response", async () => {
   try {
     const result = await searchRegistry("supabase", [
       {
-        id: "official",
+        url: "https://registry.modelcontextprotocol.io/v0.1/servers",
         label: "Official Anthropic registry",
-        serversUrl: "https://registry.modelcontextprotocol.io/v0.1/servers",
       },
     ]);
     assert.strictEqual(result.entries.length, 0);
@@ -294,14 +292,12 @@ test("searchRegistry merges registries and skips failed sources", async () => {
   try {
     const result = await searchRegistry("mcp", [
       {
-        id: "verified",
+        url: "https://verified.local/api/v1/servers",
         label: "Verified essentials",
-        serversUrl: "https://verified.local/api/v1/servers",
       },
       {
-        id: "official",
+        url: "https://registry.modelcontextprotocol.io/v0.1/servers",
         label: "Official Anthropic registry",
-        serversUrl: "https://registry.modelcontextprotocol.io/v0.1/servers",
       },
     ]);
 
@@ -645,9 +641,8 @@ test("searchRegistry fetches entries for blank query (browse mode)", async () =>
   try {
     const result = await searchRegistry("   ", [
       {
-        id: "official",
+        url: "https://registry.modelcontextprotocol.io/v0.1/servers",
         label: "Official",
-        serversUrl: "https://registry.modelcontextprotocol.io/v0.1/servers",
       },
     ]);
     assert.strictEqual(result.entries.length, officialServersFixture.length);
@@ -670,9 +665,8 @@ test("searchRegistry fetches entries for empty string query (browse mode)", asyn
   try {
     const result = await searchRegistry("", [
       {
-        id: "official",
+        url: "https://registry.modelcontextprotocol.io/v0.1/servers",
         label: "Official",
-        serversUrl: "https://registry.modelcontextprotocol.io/v0.1/servers",
       },
     ]);
     assert.strictEqual(result.entries.length, 3);
@@ -761,9 +755,8 @@ test("resolveServerName returns 'server' as ultimate fallback", () => {
 test("formatRegistryFailure shows label for known registries", () => {
   const msg = formatRegistryFailure({
     registry: {
-      id: "verified-essentials",
+      url: "https://mcp-registry.agent-tooling.dev/api/v1/servers",
       label: "Verified essentials",
-      serversUrl: "https://mcp-registry.agent-tooling.dev/api/v1/servers",
     },
     detail: "HTTP 500",
   });
@@ -778,9 +771,7 @@ test("formatRegistryFailure shows label for known registries", () => {
 test("formatRegistryFailure shows only URL for custom registries", () => {
   const msg = formatRegistryFailure({
     registry: {
-      id: "my-custom",
-      label: "My Custom Registry",
-      serversUrl: "https://custom.example.com/servers",
+      url: "https://custom.example.com/servers",
     },
     detail: "HTTP 503",
   });
@@ -789,14 +780,13 @@ test("formatRegistryFailure shows only URL for custom registries", () => {
     true,
   );
   assert.strictEqual(msg.includes("HTTP 503"), true);
-  assert.strictEqual(msg.includes("My Custom Registry"), false);
 });
 
 test("getDefaultFindRegistries returns two hardcoded registries", () => {
   const defaults = getDefaultFindRegistries();
   assert.strictEqual(defaults.length, 2);
-  assert.strictEqual(defaults[0]?.id, "verified-essentials");
-  assert.strictEqual(defaults[1]?.id, "official-anthropic-registry");
+  assert.ok(defaults[0]?.url.includes("agent-tooling.dev"));
+  assert.ok(defaults[1]?.url.includes("modelcontextprotocol.io"));
 });
 
 test("buildInstallPlanForEntry picks SSE remote when --transport sse", async () => {
@@ -896,9 +886,8 @@ test("searchRegistry filters to npm packages only via toEntry", async () => {
   try {
     const result = await searchRegistry("example", [
       {
-        id: "test",
+        url: "https://test.example.com/api/v1/servers",
         label: "Test",
-        serversUrl: "https://test.example.com/api/v1/servers",
       },
     ]);
     assert.strictEqual(result.entries.length, 2);

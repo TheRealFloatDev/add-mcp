@@ -11,9 +11,8 @@ const LEGACY_AGENTS_DIR = ".agents";
 const LEGACY_LOCK_FILE = ".mcp-lock.json";
 
 export interface FindRegistryConfigEntry {
-  id: string;
-  label: string;
-  serversUrl: string;
+  url: string;
+  label?: string;
 }
 
 export interface AddMcpConfig {
@@ -105,7 +104,25 @@ export async function saveSelectedAgents(agents: string[]): Promise<void> {
 
 export async function getFindRegistries(): Promise<FindRegistryConfigEntry[]> {
   const config = await readConfig();
-  return config.findRegistries ?? [];
+  if (!config.findRegistries) return [];
+  return config.findRegistries.map(normalizeFindRegistryEntry);
+}
+
+function normalizeFindRegistryEntry(
+  raw: Record<string, unknown>,
+): FindRegistryConfigEntry {
+  const entry = raw as FindRegistryConfigEntry & {
+    serversUrl?: string;
+    id?: string;
+  };
+  const url = entry.url ?? entry.serversUrl;
+  if (!url || typeof url !== "string") {
+    throw new Error("Registry entry missing url");
+  }
+  return {
+    url,
+    ...(entry.label ? { label: entry.label } : {}),
+  };
 }
 
 export async function saveFindRegistries(

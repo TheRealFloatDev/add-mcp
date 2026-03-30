@@ -77,14 +77,12 @@ function seedFindRegistries(homeDir: string) {
         version: 1,
         findRegistries: [
           {
-            id: "verified-essentials",
+            url: "http://localhost:3000/api/v1/servers",
             label: "Verified essentials",
-            serversUrl: "http://localhost:3000/api/v1/servers",
           },
           {
-            id: "official-anthropic-registry",
+            url: "https://registry.modelcontextprotocol.io/v0.1/servers",
             label: "Official Anthropic registry",
-            serversUrl: "https://registry.modelcontextprotocol.io/v0.1/servers",
           },
         ],
       },
