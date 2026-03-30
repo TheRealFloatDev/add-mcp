@@ -7,6 +7,8 @@ import {
   collectPromptValues,
   filterSmitheryWhenAlternativesExist,
   formatFindResultRow,
+  formatRegistryFailure,
+  getDefaultFindRegistries,
   rankRegistryEntries,
   resolveOfficialRegistryServersUrl,
   resolveServerName,
@@ -67,14 +69,12 @@ const officialServersFixture: RegistryServerEntry[] = [
     description: "MCP server for interacting with Supabase",
     version: "0.6.3",
     remotes: [{ type: "streamable-http", url: "https://mcp.supabase.com/mcp" }],
-    packages: [
-      {
-        registryType: "npm",
-        identifier: "@supabase/mcp-server-supabase",
-        version: "0.6.3",
-        transport: { type: "stdio" },
-      },
-    ],
+    package: {
+      registryType: "npm",
+      identifier: "@supabase/mcp-server-supabase",
+      version: "0.6.3",
+      transport: { type: "stdio" },
+    },
   },
   {
     name: "com.vercel/vercel-mcp",
@@ -99,27 +99,23 @@ const officialServersFixture: RegistryServerEntry[] = [
     description: "Postman MCP server for Postman API workflows",
     version: "2.7.0",
     remotes: [{ type: "streamable-http", url: "https://mcp.postman.com/mcp" }],
-    packages: [
-      {
-        registryType: "npm",
-        identifier: "@postman/postman-mcp-server",
-        version: "2.7.0",
-        transport: { type: "stdio" },
-      },
-    ],
+    package: {
+      registryType: "npm",
+      identifier: "@postman/postman-mcp-server",
+      version: "2.7.0",
+      transport: { type: "stdio" },
+    },
   },
   {
     name: "io.github.getsentry/sentry-mcp",
     description: "MCP server for Sentry issue tracking and debugging",
     version: "0.25.0",
-    packages: [
-      {
-        registryType: "npm",
-        identifier: "@sentry/mcp-server",
-        version: "0.25.0",
-        transport: { type: "stdio" },
-      },
-    ],
+    package: {
+      registryType: "npm",
+      identifier: "@sentry/mcp-server",
+      version: "0.25.0",
+      transport: { type: "stdio" },
+    },
   },
   {
     name: "io.github.github/github-mcp-server",
@@ -137,42 +133,47 @@ const officialServersFixture: RegistryServerEntry[] = [
     name: "io.github.mongodb-js/mongodb-mcp-server",
     description: "MongoDB Model Context Protocol server",
     version: "1.6.0",
-    packages: [
-      {
-        registryType: "npm",
-        identifier: "mongodb-mcp-server",
-        version: "1.6.0",
-        transport: { type: "stdio" },
-      },
-    ],
+    package: {
+      registryType: "npm",
+      identifier: "mongodb-mcp-server",
+      version: "1.6.0",
+      transport: { type: "stdio" },
+    },
   },
   {
     name: "io.github.railwayapp/mcp-server",
     description: "Official Railway MCP server",
     version: "0.1.5",
-    packages: [
-      {
-        registryType: "npm",
-        identifier: "@railway/mcp-server",
-        version: "0.1.5",
-        transport: { type: "stdio" },
-      },
-    ],
+    package: {
+      registryType: "npm",
+      identifier: "@railway/mcp-server",
+      version: "0.1.5",
+      transport: { type: "stdio" },
+    },
   },
   {
     name: "io.github.vercel/next-devtools-mcp",
     description: "Next.js development tools MCP server with stdio transport",
     version: "0.3.6",
-    packages: [
-      {
-        registryType: "npm",
-        identifier: "next-devtools-mcp",
-        version: "0.3.6",
-        transport: { type: "stdio" },
-      },
-    ],
+    package: {
+      registryType: "npm",
+      identifier: "next-devtools-mcp",
+      version: "0.3.6",
+      transport: { type: "stdio" },
+    },
   },
 ];
+
+function toApiServerShape(entry: RegistryServerEntry) {
+  const { package: pkg, repositoryUrl, ...rest } = entry;
+  return {
+    server: {
+      ...rest,
+      packages: pkg ? [pkg] : undefined,
+      repository: repositoryUrl ? { url: repositoryUrl, source: "github" } : undefined,
+    },
+  };
+}
 
 test("searchRegistry maps API response entries", async () => {
   const originalFetch = globalThis.fetch;
@@ -180,17 +181,7 @@ test("searchRegistry maps API response entries", async () => {
     ({
       ok: true,
       json: async () => ({
-        servers: officialServersFixture.map((entry) => ({
-          server: {
-            ...entry,
-            repository: entry.repositoryUrl
-              ? {
-                  url: entry.repositoryUrl,
-                  source: "github",
-                }
-              : undefined,
-          },
-        })),
+        servers: officialServersFixture.map(toApiServerShape),
       }),
     }) as Response) as typeof fetch;
 
@@ -226,7 +217,7 @@ test("searchRegistry maps API response entries", async () => {
   }
 });
 
-test("searchRegistry throws on non-ok response", async () => {
+test("searchRegistry returns failure info on non-ok response", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = (async () =>
     ({
@@ -236,15 +227,20 @@ test("searchRegistry throws on non-ok response", async () => {
     }) as Response) as typeof fetch;
 
   try {
-    await assert.rejects(async () => {
-      await searchRegistry("supabase", [
-        {
-          id: "official",
-          label: "Official Anthropic registry",
-          serversUrl: "https://registry.modelcontextprotocol.io/v0.1/servers",
-        },
-      ]);
-    });
+    const result = await searchRegistry("supabase", [
+      {
+        id: "official",
+        label: "Official Anthropic registry",
+        serversUrl: "https://registry.modelcontextprotocol.io/v0.1/servers",
+      },
+    ]);
+    assert.strictEqual(result.entries.length, 0);
+    assert.strictEqual(result.failedRegistries.length, 1);
+    assert.strictEqual(result.failedRegistries[0]?.detail, "HTTP 500");
+    assert.strictEqual(
+      result.failedRegistries[0]?.registry.label,
+      "Official Anthropic registry",
+    );
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -310,9 +306,10 @@ test("searchRegistry merges registries and skips failed sources", async () => {
     assert.strictEqual(result.entries.length, 2);
     assert.strictEqual(result.failedRegistries.length, 1);
     assert.strictEqual(
-      result.failedRegistries[0]?.includes("Verified essentials"),
-      true,
+      result.failedRegistries[0]?.registry.label,
+      "Verified essentials",
     );
+    assert.strictEqual(result.failedRegistries[0]?.detail, "HTTP 503");
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -401,14 +398,12 @@ test("formatFindResultRow prints name, install target, and github URL", () => {
     version: "0.6.3",
     repositoryUrl: "https://github.com/supabase-community/supabase-mcp",
     remotes: [{ type: "streamable-http", url: "https://mcp.supabase.com/mcp" }],
-    packages: [
-      {
-        registryType: "npm",
-        identifier: "@supabase/mcp-server-supabase",
-        version: "0.6.3",
-        transport: { type: "stdio" },
-      },
-    ],
+    package: {
+      registryType: "npm",
+      identifier: "@supabase/mcp-server-supabase",
+      version: "0.6.3",
+      transport: { type: "stdio" },
+    },
   });
 
   assert.strictEqual(
@@ -692,14 +687,12 @@ test("buildInstallPlanForEntry returns package target for package-only entry", a
       name: "io.github.getsentry/sentry-mcp",
       description: "Sentry MCP server",
       version: "0.25.0",
-      packages: [
-        {
-          registryType: "npm",
-          identifier: "@sentry/mcp-server",
-          version: "0.25.0",
-          transport: { type: "stdio" },
-        },
-      ],
+      package: {
+        registryType: "npm",
+        identifier: "@sentry/mcp-server",
+        version: "0.25.0",
+        transport: { type: "stdio" },
+      },
     },
     { yes: true },
   );
@@ -726,14 +719,12 @@ test("formatFindResultRow falls back to package name when no remote", () => {
     name: "io.github.getsentry/sentry-mcp",
     description: "Sentry MCP server",
     version: "0.25.0",
-    packages: [
-      {
-        registryType: "npm",
-        identifier: "@sentry/mcp-server",
-        version: "0.25.0",
-        transport: { type: "stdio" },
-      },
-    ],
+    package: {
+      registryType: "npm",
+      identifier: "@sentry/mcp-server",
+      version: "0.25.0",
+      transport: { type: "stdio" },
+    },
   });
   assert.strictEqual(
     row,
@@ -757,6 +748,163 @@ test("resolveServerName returns 'server' as ultimate fallback", () => {
     version: "1.0.0",
   });
   assert.strictEqual(name, "server");
+});
+
+test("formatRegistryFailure shows label for known registries", () => {
+  const msg = formatRegistryFailure({
+    registry: {
+      id: "verified-essentials",
+      label: "Verified essentials",
+      serversUrl: "https://mcp-registry.agent-tooling.dev/api/v1/servers",
+    },
+    detail: "HTTP 500",
+  });
+  assert.strictEqual(
+    msg.includes('"Verified essentials"'),
+    true,
+  );
+  assert.strictEqual(
+    msg.includes("https://mcp-registry.agent-tooling.dev/api/v1/servers"),
+    true,
+  );
+  assert.strictEqual(msg.includes("HTTP 500"), true);
+});
+
+test("formatRegistryFailure shows only URL for custom registries", () => {
+  const msg = formatRegistryFailure({
+    registry: {
+      id: "my-custom",
+      label: "My Custom Registry",
+      serversUrl: "https://custom.example.com/servers",
+    },
+    detail: "HTTP 503",
+  });
+  assert.strictEqual(msg.startsWith("Registry https://custom.example.com/servers"), true);
+  assert.strictEqual(msg.includes("HTTP 503"), true);
+  assert.strictEqual(msg.includes("My Custom Registry"), false);
+});
+
+test("getDefaultFindRegistries returns two hardcoded registries", () => {
+  const defaults = getDefaultFindRegistries();
+  assert.strictEqual(defaults.length, 2);
+  assert.strictEqual(defaults[0]?.id, "verified-essentials");
+  assert.strictEqual(defaults[1]?.id, "official-anthropic-registry");
+});
+
+test("buildInstallPlanForEntry picks SSE remote when --transport sse", async () => {
+  const plan = await buildInstallPlanForEntry(
+    {
+      name: "app.linear/linear",
+      description: "Linear MCP server",
+      version: "1.0.0",
+      remotes: [
+        { type: "streamable-http", url: "https://mcp.linear.app/mcp" },
+        { type: "sse", url: "https://mcp.linear.app/sse" },
+      ],
+    },
+    { yes: true, transport: "sse" },
+  );
+  assert.ok(plan);
+  assert.strictEqual(plan?.target, "https://mcp.linear.app/sse");
+  assert.strictEqual(plan?.transport, "sse");
+});
+
+test("buildInstallPlanForEntry defaults to streamable-http when no transport preference", async () => {
+  const plan = await buildInstallPlanForEntry(
+    {
+      name: "app.linear/linear",
+      description: "Linear MCP server",
+      version: "1.0.0",
+      remotes: [
+        { type: "sse", url: "https://mcp.linear.app/sse" },
+        { type: "streamable-http", url: "https://mcp.linear.app/mcp" },
+      ],
+    },
+    { yes: true },
+  );
+  assert.ok(plan);
+  assert.strictEqual(plan?.target, "https://mcp.linear.app/mcp");
+  assert.strictEqual(plan?.transport, "http");
+});
+
+test("buildInstallPlanForEntry falls back to available remote when preferred transport missing", async () => {
+  const plan = await buildInstallPlanForEntry(
+    {
+      name: "com.cloudflare.mcp/mcp",
+      description: "Cloudflare MCP",
+      version: "1.0.0",
+      remotes: [
+        { type: "streamable-http", url: "https://docs.mcp.cloudflare.com/mcp" },
+      ],
+    },
+    { yes: true, transport: "sse" },
+  );
+  assert.ok(plan);
+  assert.strictEqual(plan?.target, "https://docs.mcp.cloudflare.com/mcp");
+  assert.strictEqual(plan?.transport, "http");
+});
+
+test("searchRegistry filters to npm packages only via toEntry", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () =>
+    ({
+      ok: true,
+      json: async () => ({
+        servers: [
+          {
+            server: {
+              name: "com.example/oci-only",
+              description: "OCI-only server",
+              version: "1.0.0",
+              packages: [
+                {
+                  registryType: "oci",
+                  identifier: "ghcr.io/example/mcp",
+                  version: "1.0.0",
+                  transport: { type: "stdio" },
+                },
+              ],
+            },
+          },
+          {
+            server: {
+              name: "com.example/npm-server",
+              description: "NPM server",
+              version: "1.0.0",
+              packages: [
+                {
+                  registryType: "npm",
+                  identifier: "@example/mcp-server",
+                  version: "1.0.0",
+                  transport: { type: "stdio" },
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    }) as Response) as typeof fetch;
+
+  try {
+    const result = await searchRegistry("example", [
+      {
+        id: "test",
+        label: "Test",
+        serversUrl: "https://test.example.com/api/v1/servers",
+      },
+    ]);
+    assert.strictEqual(result.entries.length, 2);
+    const ociEntry = result.entries.find(
+      (e) => e.name === "com.example/oci-only",
+    );
+    const npmEntry = result.entries.find(
+      (e) => e.name === "com.example/npm-server",
+    );
+    assert.strictEqual(ociEntry?.package, undefined);
+    assert.strictEqual(npmEntry?.package?.identifier, "@example/mcp-server");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 setTimeout(() => {

@@ -20,12 +20,12 @@ import {
 import {
   getFindRegistries,
   getLastSelectedAgents,
-  getMcpLockPath,
+  getConfigPath,
   saveFindRegistries,
-} from "./mcp-lock.js";
+} from "./config.js";
 import { parseSource, isRemoteSource } from "./source-parser.js";
 import {
-  resolveOfficialRegistryServersUrl,
+  getDefaultFindRegistries,
   runFind,
   type FindRegistrySearchConfig,
 } from "./find.js";
@@ -145,23 +145,6 @@ interface Options {
   gitignore?: boolean;
 }
 
-const VERIFIED_ESSENTIALS_DEFAULT_SERVERS_URL =
-  "https://mcp-registry.agent-tooling.dev/api/v1/servers";
-
-function getDefaultFindRegistries(): FindRegistrySearchConfig[] {
-  return [
-    {
-      id: "verified-essentials",
-      label: "Verified essentials",
-      serversUrl: VERIFIED_ESSENTIALS_DEFAULT_SERVERS_URL,
-    },
-    {
-      id: "official-anthropic-registry",
-      label: "Official Anthropic registry",
-      serversUrl: resolveOfficialRegistryServersUrl(),
-    },
-  ];
-}
 
 async function ensureFindRegistriesConfigured(
   yes: boolean | undefined,
@@ -197,7 +180,7 @@ async function ensureFindRegistriesConfigured(
   );
   await saveFindRegistries(selectedRegistries);
   p.log.info(
-    `Selection has been saved to ${shortenPath(getMcpLockPath())} - you can remove or update it any time.`,
+    `Selection has been saved to ${shortenPath(getConfigPath())} - you can remove or update it any time.`,
   );
   return selectedRegistries;
 }
@@ -242,6 +225,14 @@ function extractFindOptionsFromArgv(): Partial<Options> {
     }
     if ((arg === "-n" || arg === "--name") && argv[i + 1]) {
       result.name = argv[i + 1];
+      i += 1;
+      continue;
+    }
+    if (
+      (arg === "-t" || arg === "--transport" || arg === "--type") &&
+      argv[i + 1]
+    ) {
+      result.transport = argv[i + 1] as Options["transport"];
       i += 1;
       continue;
     }
@@ -401,6 +392,7 @@ async function runFindCommand(
   const installPlan = await runFind(query, {
     yes: options.yes,
     registries,
+    transport: options.transport,
   });
 
   if (!installPlan) {
@@ -431,6 +423,11 @@ program
   )
   .option("-a, --agent <agent>", "Specify agents to install to", collect, [])
   .option(
+    "-t, --transport <type>",
+    "Preferred transport type: http (default), sse",
+  )
+  .option("--type <type>", "Alias for --transport")
+  .option(
     "-n, --name <name>",
     "Server name override (defaults to catalog entry name)",
   )
@@ -451,6 +448,11 @@ program
     "Install globally (user-level) instead of project-level",
   )
   .option("-a, --agent <agent>", "Specify agents to install to", collect, [])
+  .option(
+    "-t, --transport <type>",
+    "Preferred transport type: http (default), sse",
+  )
+  .option("--type <type>", "Alias for --transport")
   .option(
     "-n, --name <name>",
     "Server name override (defaults to catalog entry name)",

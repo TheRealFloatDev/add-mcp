@@ -41,12 +41,13 @@ export interface RegistryServerEntry {
   version: string;
   repositoryUrl?: string;
   remotes?: RegistryRemoteDefinition[];
-  packages?: RegistryPackageDefinition[];
+  package?: RegistryPackageDefinition;
 }
 
 export interface FindCommandOptions {
   yes?: boolean;
   registries?: FindRegistrySearchConfig[];
+  transport?: TransportType;
 }
 
 export interface FindInstallPlan {
@@ -69,9 +70,14 @@ export interface FindRegistrySearchConfig {
   serversUrl: string;
 }
 
+export interface FailedRegistryInfo {
+  registry: FindRegistrySearchConfig;
+  detail: string;
+}
+
 export interface RegistrySearchResult {
   entries: RegistryServerEntry[];
-  failedRegistries: string[];
+  failedRegistries: FailedRegistryInfo[];
 }
 
 export function buildPlaceholderValue(kind: "header" | "variable"): string {
@@ -204,6 +210,36 @@ export function resolveOfficialRegistryServersUrl(): string {
   return `${ensureNoTrailingSlash(configured)}/v0.1/servers`;
 }
 
+const VERIFIED_ESSENTIALS_DEFAULT_SERVERS_URL =
+  "https://mcp-registry.agent-tooling.dev/api/v1/servers";
+
+export function getDefaultFindRegistries(): FindRegistrySearchConfig[] {
+  return [
+    {
+      id: "verified-essentials",
+      label: "Verified essentials",
+      serversUrl: VERIFIED_ESSENTIALS_DEFAULT_SERVERS_URL,
+    },
+    {
+      id: "official-anthropic-registry",
+      label: "Official Anthropic registry",
+      serversUrl: resolveOfficialRegistryServersUrl(),
+    },
+  ];
+}
+
+export function formatRegistryFailure(failure: FailedRegistryInfo): string {
+  const { registry, detail } = failure;
+  const defaults = getDefaultFindRegistries();
+  const isKnown = defaults.some(
+    (d) => d.id === registry.id || d.serversUrl === registry.serversUrl,
+  );
+  if (isKnown) {
+    return `"${registry.label}" (${registry.serversUrl}) is unavailable — ${detail}`;
+  }
+  return `Registry ${registry.serversUrl} is unavailable — ${detail}`;
+}
+
 interface RegistryServerListItem {
   server?: {
     name?: string;
@@ -225,6 +261,10 @@ function toEntry(item: RegistryServerListItem): RegistryServerEntry | null {
     return null;
   }
 
+  const npmPackage = (server.packages ?? []).find(
+    (pkg) => pkg.registryType === "npm",
+  );
+
   return {
     name: server.name,
     title: server.title,
@@ -232,7 +272,7 @@ function toEntry(item: RegistryServerListItem): RegistryServerEntry | null {
     version: server.version,
     repositoryUrl: server.repository?.url,
     remotes: server.remotes,
-    packages: server.packages,
+    package: npmPackage,
   };
 }
 
@@ -259,7 +299,7 @@ export async function searchRegistry(
   }
 
   const deduped = new Map<string, RegistryServerEntry>();
-  const failedRegistries: string[] = [];
+  const failedRegistries: FailedRegistryInfo[] = [];
 
   for (const registry of registries) {
     try {
@@ -280,12 +320,8 @@ export async function searchRegistry(
       }
     } catch (error) {
       const detail = error instanceof Error ? error.message : "unknown error";
-      failedRegistries.push(`${registry.label} (${registry.serversUrl}): ${detail}`);
+      failedRegistries.push({ registry, detail });
     }
-  }
-
-  if (deduped.size === 0 && failedRegistries.length > 0) {
-    throw new Error(failedRegistries.join("; "));
   }
 
   return {
@@ -327,26 +363,19 @@ function remoteToTransport(
 
 function pickRemote(
   entry: RegistryServerEntry,
+  preferredTransport?: TransportType,
 ): RegistryRemoteDefinition | null {
   const remotes = entry.remotes ?? [];
   if (remotes.length === 0) return null;
-  const streamable = remotes.find(
-    (remote) => remote.type === "streamable-http",
-  );
-  return streamable ?? remotes[0] ?? null;
-}
-
-function pickPackage(
-  entry: RegistryServerEntry,
-): RegistryPackageDefinition | null {
-  const packages = entry.packages ?? [];
-  if (packages.length === 0) return null;
-  const npm = packages.find((pkg) => pkg.registryType === "npm");
-  return npm ?? packages[0] ?? null;
+  const preferredType: RegistryRemoteTransport =
+    preferredTransport === "sse" ? "sse" : "streamable-http";
+  const preferred = remotes.find((remote) => remote.type === preferredType);
+  // Fall back to first available when preferred transport isn't offered
+  return preferred ?? remotes[0] ?? null;
 }
 
 function formatPackageTarget(pkg: RegistryPackageDefinition): string {
-  if (pkg.registryType === "npm" && pkg.version) {
+  if (pkg.version) {
     return `${pkg.identifier}@${pkg.version}`;
   }
   return pkg.identifier;
@@ -362,8 +391,7 @@ function preferredRemoteUrl(entry: RegistryServerEntry): string | null {
 }
 
 function preferredPackageName(entry: RegistryServerEntry): string | null {
-  const pkg = pickPackage(entry);
-  return pkg ? formatPackageTarget(pkg) : null;
+  return entry.package ? formatPackageTarget(entry.package) : null;
 }
 
 export function formatFindResultRow(entry: RegistryServerEntry): string {
@@ -485,8 +513,8 @@ export async function buildInstallPlanForEntry(
   entry: RegistryServerEntry,
   options: FindCommandOptions,
 ): Promise<FindInstallPlan | null> {
-  const remote = pickRemote(entry);
-  const pkg = pickPackage(entry);
+  const remote = pickRemote(entry, options.transport);
+  const pkg = entry.package ?? null;
   const hasRemote = remote !== null;
   const hasPackage = pkg !== null;
 
@@ -539,6 +567,65 @@ export async function buildInstallPlanForEntry(
   };
 }
 
+async function offerFallbackSearch(
+  query: string,
+  alreadyQueried: FindRegistrySearchConfig[],
+): Promise<RegistryServerEntry[] | null> {
+  const defaults = getDefaultFindRegistries();
+  const queriedUrls = new Set(alreadyQueried.map((r) => r.serversUrl));
+  const candidates = defaults.filter((r) => !queriedUrls.has(r.serversUrl));
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  let selectedRegistries: FindRegistrySearchConfig[];
+
+  if (candidates.length === 1) {
+    const candidate = candidates[0]!;
+    const confirmed = await p.confirm({
+      message: `Search "${candidate.label}" (${candidate.serversUrl}) instead?`,
+    });
+    if (p.isCancel(confirmed) || !confirmed) {
+      return null;
+    }
+    selectedRegistries = [candidate];
+  } else {
+    const selected = await p.multiselect({
+      message: "Search other registries instead?",
+      options: candidates.map((r) => ({
+        value: r.id,
+        label: r.label,
+        hint: r.serversUrl,
+      })),
+      required: true,
+    });
+    if (p.isCancel(selected)) {
+      return null;
+    }
+    selectedRegistries = candidates.filter((r) =>
+      (selected as string[]).includes(r.id),
+    );
+  }
+
+  const fallbackResult = await searchRegistry(query, selectedRegistries);
+
+  if (fallbackResult.failedRegistries.length > 0) {
+    for (const failure of fallbackResult.failedRegistries) {
+      p.log.error(formatRegistryFailure(failure));
+    }
+  }
+
+  if (fallbackResult.entries.length === 0) {
+    if (fallbackResult.failedRegistries.length === 0) {
+      p.log.warn(`No MCP servers found for "${query}"`);
+    }
+    return null;
+  }
+
+  return fallbackResult.entries;
+}
+
 export async function runFind(
   query: string,
   options: FindCommandOptions,
@@ -553,27 +640,34 @@ export async function runFind(
             serversUrl: resolveOfficialRegistryServersUrl(),
           },
         ];
-  let entries: RegistryServerEntry[];
-  let failedRegistries: string[] = [];
-  try {
-    const result = await searchRegistry(query, registries);
-    entries = result.entries;
-    failedRegistries = result.failedRegistries;
-  } catch (error) {
-    p.log.error(
-      `Failed to query configured MCP registries: ${error instanceof Error ? error.message : "unknown error"}`,
-    );
-    return null;
+
+  const result = await searchRegistry(query, registries);
+  let entries = result.entries;
+  const { failedRegistries } = result;
+
+  if (failedRegistries.length > 0 && entries.length > 0) {
+    for (const failure of failedRegistries) {
+      p.log.warn(formatRegistryFailure(failure));
+    }
   }
 
-  if (failedRegistries.length > 0) {
-    p.log.warn(
-      `Some registries failed and were skipped: ${failedRegistries.join("; ")}`,
-    );
+  if (entries.length === 0 && failedRegistries.length > 0) {
+    for (const failure of failedRegistries) {
+      p.log.error(formatRegistryFailure(failure));
+    }
+
+    if (!options.yes) {
+      const fallbackEntries = await offerFallbackSearch(query, registries);
+      if (fallbackEntries) {
+        entries = fallbackEntries;
+      }
+    }
   }
 
   if (entries.length === 0) {
-    p.log.warn(`No MCP servers found for "${query}"`);
+    if (failedRegistries.length === 0) {
+      p.log.warn(`No MCP servers found for "${query}"`);
+    }
     return null;
   }
 
