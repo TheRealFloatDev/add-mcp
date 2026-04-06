@@ -63,6 +63,47 @@
   },
   {
     "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.amazonaws/aws-knowledge-mcp",
+      "title": "AWS Knowledge",
+      "description": "Official AWS Knowledge MCP server for real-time access to AWS documentation, API references, and best practices.",
+      "repository": {
+        "url": "https://github.com/awslabs/mcp",
+        "source": "github",
+        "subfolder": "src/aws-knowledge-mcp-server"
+      },
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.aws.amazon.com/aws-mcp/latest/userguide/what-is-mcp-server.html",
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://knowledge-mcp.global.api.aws"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.better-auth/mcp",
+      "title": "Better Auth",
+      "description": "Better Auth documentation and setup MCP server for AI-assisted auth integration.",
+      "repository": {
+        "url": "https://github.com/better-auth/better-auth",
+        "source": "github"
+      },
+      "version": "1.0.0",
+      "websiteUrl": "https://www.better-auth.com",
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.inkeep.com/better-auth/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
       "name": "io.github.browserbase/mcp-server-browserbase",
       "title": "Browserbase",
@@ -190,6 +231,89 @@
             {
               "name": "CONTEXT7_API_KEY",
               "description": "API key for authentication",
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.descope/docs-mcp",
+      "title": "Descope",
+      "description": "Descope documentation MCP server for AI agents with product knowledge and doc search.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.descope.com/mcp/docs-mcp-server",
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://docs-mcp.descope.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "dev.e2b/mcp-server",
+      "title": "E2B",
+      "description": "Code interpreter sandbox MCP server powered by E2B for secure code execution.",
+      "repository": {
+        "url": "https://github.com/e2b-dev/mcp-server",
+        "source": "github",
+        "subfolder": "packages/js"
+      },
+      "version": "0.2.3",
+      "websiteUrl": "https://e2b.dev",
+      "packages": [
+        {
+          "registryType": "npm",
+          "registryBaseUrl": "https://registry.npmjs.org",
+          "identifier": "@e2b/mcp-server",
+          "version": "0.2.3",
+          "transport": {
+            "type": "stdio"
+          },
+          "environmentVariables": [
+            {
+              "name": "E2B_API_KEY",
+              "description": "Your E2B API key",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.elevenlabs/mcp",
+      "title": "ElevenLabs",
+      "description": "Official ElevenLabs MCP server for text-to-speech, voice cloning, and audio processing.",
+      "repository": {
+        "url": "https://github.com/elevenlabs/elevenlabs-mcp",
+        "source": "github"
+      },
+      "version": "0.9.1",
+      "websiteUrl": "https://elevenlabs.io",
+      "packages": [
+        {
+          "registryType": "pypi",
+          "identifier": "elevenlabs-mcp",
+          "version": "0.9.1",
+          "runtimeHint": "uvx",
+          "transport": {
+            "type": "stdio"
+          },
+          "environmentVariables": [
+            {
+              "name": "ELEVENLABS_API_KEY",
+              "description": "Your ElevenLabs API key",
+              "isRequired": true,
               "isSecret": true
             }
           ]
@@ -519,6 +643,31 @@
         }
       ],
       "title": "Notion"
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.microsoft/playwright-mcp",
+      "title": "Playwright",
+      "description": "Official Playwright MCP server for browser automation and testing by Microsoft.",
+      "repository": {
+        "url": "https://github.com/microsoft/playwright-mcp",
+        "source": "github"
+      },
+      "version": "0.0.68",
+      "websiteUrl": "https://playwright.dev",
+      "packages": [
+        {
+          "registryType": "npm",
+          "registryBaseUrl": "https://registry.npmjs.org",
+          "identifier": "@playwright/mcp",
+          "version": "0.0.68",
+          "transport": {
+            "type": "stdio"
+          }
+        }
+      ]
     }
   },
   {
