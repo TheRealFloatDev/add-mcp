@@ -89,6 +89,10 @@ Besides the implicit add command, `add-mcp` also supports the following commands
 | ------------- | ------------------------------------------------------------ |
 | `find`        | Search MCP registry servers and install a selected match     |
 | `search`      | Alias for `find`                                             |
+| `list`        | List installed MCP servers across detected agents            |
+| `remove`      | Remove an MCP server from agent configurations               |
+| `sync`        | Synchronize server names and installations across agents     |
+| `unify`       | Alias for `sync`                                             |
 | `list-agents` | List all supported coding agents with scope (project/global) |
 
 ## Add Command
@@ -288,6 +292,72 @@ To add your own registry, append an entry to `findRegistries` in `~/.config/add-
   "label": "My custom registry"
 }
 ```
+
+## List Command
+
+List installed MCP servers across detected agents:
+
+```bash
+# List servers for all detected agents in the project
+npx add-mcp list
+
+# List global server configs
+npx add-mcp list -g
+
+# List servers for a specific agent (shown even if not detected)
+npx add-mcp list -a cursor
+```
+
+| Option                | Description                            |
+| --------------------- | -------------------------------------- |
+| `-g, --global`        | List global configs instead of project |
+| `-a, --agent <agent>` | Filter to specific agent(s)            |
+
+## Remove Command
+
+Remove an MCP server from agent configurations by server name, URL, or package name:
+
+```bash
+# Remove by server name (interactive selection by default)
+npx add-mcp remove neon
+
+# Remove all matches without prompting
+npx add-mcp remove neon -y
+
+# Remove by URL
+npx add-mcp remove https://mcp.neon.tech/mcp -y
+
+# Remove from global configs for a specific agent
+npx add-mcp remove neon -g -a cursor -y
+```
+
+| Option                | Description                            |
+| --------------------- | -------------------------------------- |
+| `-g, --global`        | Remove from global configs             |
+| `-a, --agent <agent>` | Filter to specific agent(s)            |
+| `-y, --yes`           | Remove all matches without prompting   |
+
+## Sync Command
+
+Synchronize server names and installations across all detected agents. Servers are grouped by URL or package name, and each group is unified to the shortest server name. Servers with conflicting headers, env, or args across agents are skipped with a warning.
+
+```bash
+# Sync project-level configs (interactive confirmation)
+npx add-mcp sync
+
+# Sync without prompting
+npx add-mcp sync -y
+
+# Sync global configs
+npx add-mcp sync -g -y
+```
+
+| Option         | Description                            |
+| -------------- | -------------------------------------- |
+| `-g, --global` | Sync global configs instead of project |
+| `-y, --yes`    | Skip confirmation prompts              |
+
+`unify` is an alias for `sync`.
 
 ## Troubleshooting
 
