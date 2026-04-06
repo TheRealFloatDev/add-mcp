@@ -223,7 +223,7 @@ If you run with `-y` before this one-time registry setup is completed, the CLI e
 
 | Registry                        | Base URL                                                | Description                                                                                                                                                                                                                        |
 | ------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **add-mcp curated registry**    | `https://mcp.agent-tooling.dev/api/v1/servers` | A curated list of first-party, verified MCP servers from popular developer tools and SaaS services. Designed to surface high-quality, officially maintained servers instead of a long tail of unmaintained or third-party entries. |
+| **add-mcp curated registry**    | `https://mcp.agent-tooling.dev/api/v1/servers`          | A curated list of first-party, verified MCP servers from popular developer tools and SaaS services. Designed to surface high-quality, officially maintained servers instead of a long tail of unmaintained or third-party entries. |
 | **Official Anthropic registry** | `https://registry.modelcontextprotocol.io/v0.1/servers` | The community-driven MCP server registry maintained by Anthropic. Contains the broadest catalog of MCP servers.                                                                                                                    |
 
 ### Missing A Server in add-mcp Curated Registry?
@@ -331,11 +331,11 @@ npx add-mcp remove https://mcp.neon.tech/mcp -y
 npx add-mcp remove neon -g -a cursor -y
 ```
 
-| Option                | Description                            |
-| --------------------- | -------------------------------------- |
-| `-g, --global`        | Remove from global configs             |
-| `-a, --agent <agent>` | Filter to specific agent(s)            |
-| `-y, --yes`           | Remove all matches without prompting   |
+| Option                | Description                          |
+| --------------------- | ------------------------------------ |
+| `-g, --global`        | Remove from global configs           |
+| `-a, --agent <agent>` | Filter to specific agent(s)          |
+| `-y, --yes`           | Remove all matches without prompting |
 
 ## Sync Command
 

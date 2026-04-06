@@ -7,12 +7,7 @@
  */
 
 import assert from "node:assert";
-import {
-  mkdtempSync,
-  rmSync,
-  readFileSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdtempSync, rmSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as jsonc from "jsonc-parser";
@@ -119,7 +114,10 @@ test("JSON: preserves comments in JSONC files", () => {
   removeServerFromConfig(filePath, "json", "mcpServers", "neon");
 
   const content = readFileSync(filePath, "utf-8");
-  assert.ok(content.includes("// This is a comment"), "Comment should be preserved");
+  assert.ok(
+    content.includes("// This is a comment"),
+    "Comment should be preserved",
+  );
   const parsed = jsonc.parse(content);
   assert.strictEqual(parsed.mcpServers.neon, undefined);
   assert.ok(parsed.mcpServers.github);

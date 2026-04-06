@@ -1,6 +1,14 @@
 import type { AgentType, ConfigFile } from "./types.js";
-import { agents, detectProjectAgents, detectAllGlobalAgents } from "./agents.js";
-import { getConfigPath, getConfigKey, type InstallOptions } from "./installer.js";
+import {
+  agents,
+  detectProjectAgents,
+  detectAllGlobalAgents,
+} from "./agents.js";
+import {
+  getConfigPath,
+  getConfigKey,
+  type InstallOptions,
+} from "./installer.js";
 import { readConfig, getNestedValue } from "./formats/index.js";
 
 export interface InstalledServer {
@@ -99,7 +107,11 @@ export function readServersForAgent(
 
   const servers: InstalledServer[] = [];
 
-  if (serversObj && typeof serversObj === "object" && !Array.isArray(serversObj)) {
+  if (
+    serversObj &&
+    typeof serversObj === "object" &&
+    !Array.isArray(serversObj)
+  ) {
     for (const [serverName, serverConfig] of Object.entries(serversObj)) {
       if (serverConfig && typeof serverConfig === "object") {
         const config = serverConfig as Record<string, unknown>;
@@ -149,7 +161,9 @@ export async function gatherInstalledServers(options: {
     for (const agentType of options.agents) {
       const detected = detectedSet.has(agentType);
       if (detected) {
-        results.push(readServersForAgent(agentType, { scope, cwd: options.cwd }));
+        results.push(
+          readServersForAgent(agentType, { scope, cwd: options.cwd }),
+        );
       } else {
         const agent = agents[agentType];
         const installOptions: InstallOptions = {

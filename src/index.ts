@@ -500,16 +500,8 @@ program
 program
   .command("list")
   .description("List installed MCP servers across detected agents")
-  .option(
-    "-g, --global",
-    "List global configs instead of project-level",
-  )
-  .option(
-    "-a, --agent <agent>",
-    "Filter to specific agent(s)",
-    collect,
-    [],
-  )
+  .option("-g, --global", "List global configs instead of project-level")
+  .option("-a, --agent <agent>", "Filter to specific agent(s)", collect, [])
   .action(async (rawOptions: Options | { opts: () => Options }) => {
     const options = {
       ...extractOptions(rawOptions),
@@ -523,22 +515,11 @@ program
 program
   .command("remove <query>")
   .description("Remove an MCP server from agent configurations")
-  .option(
-    "-g, --global",
-    "Remove from global configs instead of project-level",
-  )
-  .option(
-    "-a, --agent <agent>",
-    "Filter to specific agent(s)",
-    collect,
-    [],
-  )
+  .option("-g, --global", "Remove from global configs instead of project-level")
+  .option("-a, --agent <agent>", "Filter to specific agent(s)", collect, [])
   .option("-y, --yes", "Remove all matches without prompting")
   .action(
-    async (
-      query: string,
-      rawOptions: Options | { opts: () => Options },
-    ) => {
+    async (query: string, rawOptions: Options | { opts: () => Options }) => {
       const options = {
         ...extractOptions(rawOptions),
         ...extractSubcommandOptionsFromArgv(),
@@ -554,10 +535,7 @@ program
   .description(
     "Synchronize server names and installations across all detected agents",
   )
-  .option(
-    "-g, --global",
-    "Sync global configs instead of project-level",
-  )
+  .option("-g, --global", "Sync global configs instead of project-level")
   .option("-y, --yes", "Skip confirmation prompts")
   .action(async (rawOptions: Options | { opts: () => Options }) => {
     const options = {
@@ -570,10 +548,7 @@ program
 program
   .command("unify")
   .description("Alias for sync")
-  .option(
-    "-g, --global",
-    "Sync global configs instead of project-level",
-  )
+  .option("-g, --global", "Sync global configs instead of project-level")
   .option("-y, --yes", "Skip confirmation prompts")
   .action(async (rawOptions: Options | { opts: () => Options }) => {
     const options = {
@@ -627,7 +602,9 @@ async function runListCommand(options: Options): Promise<void> {
       const identityHint = server.identity
         ? ` ${DIM}(${server.identity})${RESET}`
         : "";
-      console.log(`  ${DIM}-${RESET} ${TEXT}${server.serverName}${RESET}${identityHint}`);
+      console.log(
+        `  ${DIM}-${RESET} ${TEXT}${server.serverName}${RESET}${identityHint}`,
+      );
     }
   }
 
@@ -787,9 +764,11 @@ function pickCanonicalName(entries: InstalledServer[]): string {
   return names[0]![0];
 }
 
-function extractConflictFields(
-  config: Record<string, unknown>,
-): { headers: unknown; env: unknown; args: unknown } {
+function extractConflictFields(config: Record<string, unknown>): {
+  headers: unknown;
+  env: unknown;
+  args: unknown;
+} {
   return {
     headers: config.headers ?? config.http_headers ?? null,
     env: config.env ?? config.envs ?? config.environment ?? null,
@@ -941,16 +920,16 @@ async function runSyncCommand(options: Options): Promise<void> {
   if (skipped.length > 0) {
     planLines.push(chalk.yellow("Skipped (conflicts):"));
     for (const s of skipped) {
-      planLines.push(
-        `  ${s.identity}: ${s.conflictReason}`,
-      );
+      planLines.push(`  ${s.identity}: ${s.conflictReason}`);
     }
   }
 
   if (renames.length === 0 && additions.length === 0) {
     // Only skipped items, nothing actionable
     p.note(planLines.join("\n"), "Sync Plan");
-    p.log.info("All servers are already in sync (some skipped due to conflicts)");
+    p.log.info(
+      "All servers are already in sync (some skipped due to conflicts)",
+    );
     console.log();
     return;
   }

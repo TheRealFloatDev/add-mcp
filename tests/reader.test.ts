@@ -7,12 +7,7 @@
  */
 
 import assert from "node:assert";
-import {
-  mkdtempSync,
-  rmSync,
-  mkdirSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -202,7 +197,10 @@ test("readServersForAgent: reads from claude-code .mcp.json", () => {
 
   assert.strictEqual(result.servers.length, 1);
   assert.strictEqual(result.servers[0]!.serverName, "context7");
-  assert.strictEqual(result.servers[0]!.identity, "https://mcp.context7.com/mcp");
+  assert.strictEqual(
+    result.servers[0]!.identity,
+    "https://mcp.context7.com/mcp",
+  );
 });
 
 test("readServersForAgent: reads VS Code config with 'servers' key", () => {

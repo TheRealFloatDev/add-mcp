@@ -703,11 +703,7 @@ test("remove: removes server by name with -y", () => {
     }),
   );
 
-  const result = runCli(
-    ["remove", "neon", "-y"],
-    projectDir,
-    homeDir,
-  );
+  const result = runCli(["remove", "neon", "-y"], projectDir, homeDir);
 
   if (result.status !== 0) {
     throw new Error(
@@ -760,14 +756,12 @@ test("remove: prints message when no matches found", () => {
   mkdirSync(cursorDir, { recursive: true });
   writeFileSync(
     join(cursorDir, "mcp.json"),
-    JSON.stringify({ mcpServers: { neon: { url: "https://mcp.neon.tech/mcp" } } }),
+    JSON.stringify({
+      mcpServers: { neon: { url: "https://mcp.neon.tech/mcp" } },
+    }),
   );
 
-  const result = runCli(
-    ["remove", "nonexistent", "-y"],
-    projectDir,
-    homeDir,
-  );
+  const result = runCli(["remove", "nonexistent", "-y"], projectDir, homeDir);
 
   const output = `${result.stdout}\n${result.stderr}`;
   assert.match(output, /No matching servers found/);
