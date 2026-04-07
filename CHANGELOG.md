@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.8.1] - 2026-04-07
+
+- fix `find` / `search` package installs to stop pinning npm versions and resolve latest implicitly
+
 ## [1.8.0] - 2026-04-05
 
 - add `list` command to display installed MCP servers across detected agents
