@@ -768,7 +768,7 @@
       "title": "Resend",
       "description": "Official Resend MCP server for email operations and audience management.",
       "repository": {
-        "url": "https://github.com/resend/mcp-send-email",
+        "url": "https://github.com/resend/resend-mcp",
         "source": "github"
       },
       "version": "2.2.0",
