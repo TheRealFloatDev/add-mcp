@@ -918,6 +918,43 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.upstash/mcp-server",
+      "title": "Upstash",
+      "description": "Official Upstash MCP server for managing Redis, QStash, and Workflow resources.",
+      "repository": {
+        "url": "https://github.com/upstash/mcp-server",
+        "source": "github"
+      },
+      "version": "0.2.2",
+      "packages": [
+        {
+          "registryType": "npm",
+          "registryBaseUrl": "https://registry.npmjs.org",
+          "identifier": "@upstash/mcp-server",
+          "version": "0.2.2",
+          "transport": {
+            "type": "stdio"
+          },
+          "environmentVariables": [
+            {
+              "name": "UPSTASH_EMAIL",
+              "description": "Your Upstash account email.",
+              "isRequired": true
+            },
+            {
+              "name": "UPSTASH_API_KEY",
+              "description": "Your Upstash account API key.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.vercel/vercel-mcp",
       "description": "An MCP server for Vercel",
       "repository": {
