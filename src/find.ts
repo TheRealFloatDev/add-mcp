@@ -363,9 +363,6 @@ function pickRemote(
 }
 
 function formatPackageTarget(pkg: RegistryPackageDefinition): string {
-  if (pkg.version) {
-    return `${pkg.identifier}@${pkg.version}`;
-  }
   return pkg.identifier;
 }
 
