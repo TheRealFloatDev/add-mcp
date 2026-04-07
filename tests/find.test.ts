@@ -682,7 +682,7 @@ test("buildInstallPlanForEntry returns package target for package-only entry", a
     { yes: true },
   );
   assert.ok(plan);
-  assert.strictEqual(plan?.target, "@sentry/mcp-server@0.25.0");
+  assert.strictEqual(plan?.target, "@sentry/mcp-server");
   assert.strictEqual(plan?.transport, undefined);
   assert.strictEqual(plan?.headers, undefined);
 });
