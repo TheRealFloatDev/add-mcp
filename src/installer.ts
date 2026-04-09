@@ -59,11 +59,11 @@ export function resolvePackageArguments(
   for (const arg of packageArguments) {
     const resolvedValue = arg.value ?? arg.default;
     if (arg.type === "positional") {
-      if (resolvedValue) {
+      if (resolvedValue && resolvedValue.trim() !== "") {
         result.push(resolvedValue);
       }
     } else if (arg.type === "named" && arg.name) {
-      if (resolvedValue) {
+      if (resolvedValue && resolvedValue.trim() !== "") {
         result.push(arg.name, resolvedValue);
       } else {
         result.push(arg.name);
